@@ -20,18 +20,23 @@ class RobotAgent(Agent):
 
     def deliberate(self):
         pass
-
-    def update(self, percepts, action):
+    
+    def update(self, percepts, action): # The robot picks up waste
         if action == 0 and percepts["success"]:
-            self.knowledge["carried"] = True
-        elif action in [1, 2, 3] and percepts["success"]:
-            self.knowledge["carried"] = False
-        self.knowledge.update()
+            if self.knowledge["carried"] == []:
+                self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
+            elif self.knowledge["carried"] == [self.knowledge["color_waste"][1][1]]:
+                self.knowledge["carried"] = [self.knowledge["color_waste"][1][1] + 1]
+
+        elif action in [1, 2, 3] and percepts["success"]: # The robot drops some waste 
+            self.knowledge["carried"].remove(action)
+
+        self.knowledge.update(percepts)
 
     def step(self):
-        action = self.deliberate(self.knowledge)
+        action = self.deliberate()
         percepts = self.model.do(self, action)
-        self.knowledge.update(percepts)
+        self.update(percepts, action)
 
 
 class GreenAgent(RobotAgent):
