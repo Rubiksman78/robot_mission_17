@@ -3,8 +3,9 @@ import random
 
 
 class RobotAgent(Agent):
-    def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
+    def __init__(self, id, model, knowledge: dict):  # TODO ask yourself how to create model
         super().__init__(model)
+        self.id = id
         self.knowledge = knowledge
         self.colors_ids = {1: "green", 2: "yellow", 3: "red"}
         self.actions_dict = {
