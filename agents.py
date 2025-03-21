@@ -4,10 +4,10 @@ import random
 
 class RobotAgent(Agent):
     def __init__(
-        self, id, model, knowledge: dict
+        self, model, knowledge: dict
     ):  # TODO ask yourself how to create model
         super().__init__(model)
-        self.id = id
+        # self.id = id
         self.knowledge = knowledge
         self.colors_ids = {1: "green", 2: "yellow", 3: "red"}
         self.actions_dict = {
@@ -52,7 +52,7 @@ class RobotAgent(Agent):
 
 class GreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
+        super().__init__(model, knowledge)
         self.treshold = 1 / 3
         self.color_to_gather = 1  # Can only gather green wastes
 
@@ -127,7 +127,7 @@ class GreenAgent(RobotAgent):
 
 class YellowAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
+        super().__init__(model, knowledge)
         self.treshold = 2 / 3
         self.color_to_gather = 2  # Can only gather yellow wastes
 
@@ -202,7 +202,7 @@ class YellowAgent(RobotAgent):
 
 class RedAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
+        super().__init__(model, knowledge)
         self.treshold = 1
         self.color_to_gather = 3  # Can only gather red wastes
 

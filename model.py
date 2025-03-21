@@ -11,9 +11,9 @@ class RobotMission(Model):
         n_agents is a dict with the number of agents per color
         '''
         super().__init__(seed=seed)
-        green_agents = [GreenAgent(self, id=len(self.agents), knowledge=self.initialize_agent("green")) for _ in range(n_agents["green"])]
-        yellow_agents = [YellowAgent(self, id=len(self.agents), knowledge=self.initialize_agent("yellow")) for _ in range(n_agents["yellow"])]
-        red_agents = [RedAgent(self, id=len(self.agents), knowledge=self.initialize_agent("red")) for _ in range(n_agents["red"])]
+        green_agents = [GreenAgent(self, knowledge=self.initialize_agent("green")) for _ in range(n_agents["green"])]
+        yellow_agents = [YellowAgent(self, knowledge=self.initialize_agent("yellow")) for _ in range(n_agents["yellow"])]
+        red_agents = [RedAgent(self, knowledge=self.initialize_agent("red")) for _ in range(n_agents["red"])]
         self.grid = MultiGrid(grid_size, grid_size, False)
         wastes = [Waste(self) for i in range(grid_size) for j in range(grid_size)]
         radioactivities = [Radioactivity(self) for i in range(grid_size) for j in range(grid_size)]
@@ -24,8 +24,9 @@ class RobotMission(Model):
 
     def place_agents(self, agent):
         #TO DO: PLACE THE AGENTS CORRECTLY (ROBOT AGENTS + WASTE AGENTS + RADIOACTIVITY AGENTS)
-        random_pos = np.random.randint(0, self.width, 2)
-        random_pos = tuple(random_pos)
+        random_x = np.random.randint(0, self.grid.width)
+        random_y = np.random.randint(0, self.grid.height)
+        random_pos = (random_x, random_y)
         self.grid.place_agent(agent, random_pos)
         agent.pos = random_pos
 

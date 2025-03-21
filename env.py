@@ -15,11 +15,13 @@ ACTIONS_DICT = {
 }
 
 class Waste(Agent):
-    def __init__(self):
+    def __init__(self, model):
+        super().__init__(model)
         self.color_waste = 0
 
 class Radioactivity(Agent):
-    def __init__(self):
+    def __init__(self, model):
+        super().__init__(model)
         self.radioactivity_level = 0
         self.is_waste_disposal = 0
         self.is_wall = 0
@@ -50,7 +52,14 @@ class Environment:
             is_wall[x][y] = neighbour_agent.is_wall
             if isinstance(neighbour_agent, RobotAgent):
                 other_robots[x][y] = 1
-        observation = [radioactivity_level, color_waste, is_waste_disposal, is_wall, other_robots, success]
+        observation = {
+            "radioactivity": radioactivity_level,
+            "color_waste": color_waste,
+            "is_waste_disposal": is_waste_disposal,
+            "is_wall": is_wall,
+            "other_robots": other_robots,
+            "success": success
+        }
         #Update the cell according to the action
         if action in [0, 1, 2, 3] and success:
             cell_agent.color_waste = action
