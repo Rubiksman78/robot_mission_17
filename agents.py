@@ -204,7 +204,7 @@ class RedAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super.__init__(self, model, knowledge)
         self.treshold = 1
-        self.color_to_gather = 2  # Can only gather yellow wastes
+        self.color_to_gather = 3  # Can only gather red wastes
 
     def deliberate(self):
         if self.knowledge["color_waste"][1, 1] == self.color_to_gather and (
