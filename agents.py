@@ -6,13 +6,11 @@ WALL = 0
 
 
 class RobotAgent(Agent):
-    def __init__(
-        self, id, model, knowledge: dict
-    ):  # TODO ask yourself how to create model
+    def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
         super().__init__(model)
-        self.id = id
+        # self.id = id
         self.knowledge = knowledge
-        self.colors_ids = {1: "green", 2: "yellow", 3: "red"}
+        self.colors_ids = {0: "green", 1: "yellow", 2: "red"}
         self.actions_dict = {
             "pick": 0,
             "release_green": 1,
@@ -22,6 +20,7 @@ class RobotAgent(Agent):
             "move_Right": 5,
             "move_Down": 6,
             "move_Left": 7,
+            "nothing": 8,
         }
 
     def deliberate(self):
@@ -55,9 +54,9 @@ class RobotAgent(Agent):
 
 class RandomGreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
-        self.treshold = 1 / 3
-        self.color_to_gather = 1  # Can only gather green wastes
+        super().__init__(model, knowledge)
+        self.threshold = 1 / 3
+        self.color_to_gather = 0  # Can only gather green wastes
 
     def deliberate(self):
         if self.knowledge["color_waste"][1, 1] == self.color_to_gather and (
@@ -68,7 +67,7 @@ class RandomGreenAgent(RobotAgent):
 
         if (
             len(self.knowledge["carried"]) > 0
-            and self.knowledge["is_waste_disposal"][1, 1] == 0
+            and self.knowledge["is_waste_disposal"][1, 1] == 1
         ):
             return self.actions_dict[
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
@@ -84,19 +83,22 @@ class RandomGreenAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if self.knowledge["radioactivity"][1, 2] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if self.knowledge["radioactivity"][0, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if self.knowledge["radioactivity"][1, 0] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if self.knowledge["radioactivity"][2, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Down")
 
-        action = random.choice(possible_actions)
+        if len(possible_actions) == 0:
+            action = "nothing"
+        else:
+            action = random.choice(possible_actions)
 
         if action == "release":
             action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
@@ -106,9 +108,9 @@ class RandomGreenAgent(RobotAgent):
 
 class RandomYellowAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
-        self.treshold = 2 / 3
-        self.color_to_gather = 2  # Can only gather yellow wastes
+        super().__init__(model, knowledge)
+        self.threshold = 2 / 3
+        self.color_to_gather = 1  # Can only gather yellow wastes
 
     def deliberate(self):
         if self.knowledge["color_waste"][1, 1] == self.color_to_gather and (
@@ -119,7 +121,7 @@ class RandomYellowAgent(RobotAgent):
 
         if (
             len(self.knowledge["carried"]) > 0
-            and self.knowledge["is_waste_disposal"][1, 1] == 0
+            and self.knowledge["is_waste_disposal"][1, 1] == 1
         ):
             return self.actions_dict[
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
@@ -135,19 +137,22 @@ class RandomYellowAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if self.knowledge["radioactivity"][1, 2] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if self.knowledge["radioactivity"][0, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if self.knowledge["radioactivity"][1, 0] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if self.knowledge["radioactivity"][2, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Down")
 
-        action = random.choice(possible_actions)
+        if len(possible_actions) == 0:
+            action = "nothing"
+        else:
+            action = random.choice(possible_actions)
 
         if action == "release":
             action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
@@ -157,9 +162,9 @@ class RandomYellowAgent(RobotAgent):
 
 class RandomRedAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
-        self.treshold = 1
-        self.color_to_gather = 3  # Can only gather red wastes
+        super().__init__(model, knowledge)
+        self.threshold = 1
+        self.color_to_gather = 2  # Can only gather red wastes
 
     def deliberate(self):
         if self.knowledge["color_waste"][1, 1] == self.color_to_gather and (
@@ -169,7 +174,7 @@ class RandomRedAgent(RobotAgent):
 
         if (
             len(self.knowledge["carried"]) > 0
-            and self.knowledge["is_waste_disposal"][1, 1] == 0
+            and self.knowledge["is_waste_disposal"][1, 1] == 1
         ):
             return self.actions_dict[
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
@@ -185,25 +190,27 @@ class RandomRedAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if self.knowledge["radioactivity"][1, 2] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if self.knowledge["radioactivity"][0, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if self.knowledge["radioactivity"][1, 0] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if self.knowledge["radioactivity"][2, 1] <= self.treshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Down")
 
-        action = random.choice(possible_actions)
+        if len(possible_actions) == 0:
+            action = "nothing"
+        else:
+            action = random.choice(possible_actions)
 
         if action == "release":
             action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
 
         return self.actions_dict[action]
-
 
 class GreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
