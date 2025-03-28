@@ -45,7 +45,7 @@ class Environment:
         observation = self.get_info(pos)
         success = observation["success"]
         # Update the cell according to the action
-        new_position = None
+        position_moved = None
         if action != 8:
             if action == 0 and success:
                 for agent in cell_agent:
@@ -63,14 +63,20 @@ class Environment:
                     new_position = (pos[0], pos[1] -1)
                 elif action == 7:#left
                     new_position = (pos[0] - 1, pos[1])
+                agent_newpos = self.grid.get_cell_list_contents(new_position)
+                agent_already_here = False
+                for agent_new in agent_newpos:
+                    if isinstance(agent_new, RobotAgent):
+                        agent_already_here = True
                 if (
                     0 <= new_position[0] < self.width
                     and 0 <= new_position[1] < self.height
-                ):
+                ) and not agent_already_here:
                     self.grid.move_agent(agent, new_position)
-        if new_position is None:
-            new_position = pos
-        new_observation = self.get_info(new_position)
+                    position_moved = new_position
+        if position_moved is None:
+            position_moved = pos
+        new_observation = self.get_info(position_moved)
         return new_observation
 
     def get_info(self, pos):
