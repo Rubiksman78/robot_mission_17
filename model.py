@@ -27,7 +27,7 @@ class RobotMission(Model):
         for agent in green_agents + yellow_agents + red_agents:
             self.place_robot_agents(agent)
         self.place_cell_agents()
-        self.env = Environment(self.grid)
+        self.env = Environment(self, self.grid)
         self.initialize_agent()
 
     def place_robot_agents(self, agent):
@@ -52,7 +52,7 @@ class RobotMission(Model):
                 # first region place Radioactivity(0,0,0) second region Radioactivity(0.5), third Radioactivity(0.8)
                 if i < self.grid.width / 3:
                     radioactivity = Radioactivity(self, 0, 0, 0)
-                elif i < self.grid.width / 3 * 2:
+                elif self.grid.width / 3 <= i < (self.grid.width / 3) * 2:
                     radioactivity = Radioactivity(self, 0.5, 0, 0)
                 else:
                     radioactivity = Radioactivity(self, 0.8, 0, 0)
@@ -75,11 +75,11 @@ class RobotMission(Model):
                 random_y = np.random.randint(0, self.grid.height)
             elif waste.color_waste == 1:
                 random_x = np.random.randint(
-                    self.grid.width / 3, self.grid.width / 3 * 2
+                    self.grid.width / 3 + 1, self.grid.width / 3 * 2
                 )
                 random_y = np.random.randint(0, self.grid.height)
             else:
-                random_x = np.random.randint(self.grid.width / 3 * 2, self.grid.width)
+                random_x = np.random.randint(self.grid.width / 3 * 2 + 1, self.grid.width)
                 random_y = np.random.randint(0, self.grid.height)
             random_pos = (random_x, random_y)
             self.grid.place_agent(waste, random_pos)
@@ -91,7 +91,7 @@ class RobotMission(Model):
     def initialize_agent(self):
         for agent in self.agents:
             if isinstance(agent, RobotAgent):
-                knowledge = self.env.get_info(agent)
+                knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
                 agent.knowledge = knowledge
 
@@ -104,8 +104,8 @@ class RobotMission(Model):
 
 
 test_model = RobotMission(
-    {"green": 3, "yellow": 3, "red": 3},
-    {"green": 6, "yellow": 6, "red": 6},
+    {"green": 2, "yellow": 3, "red": 2},
+    {"green": 10, "yellow": 10, "red": 10},
     grid_size=10,
 )
 
@@ -122,14 +122,18 @@ for i in range(100):
     plt.clf()
     for agent in test_model.agents:
         if isinstance(agent, Radioactivity):
-            if agent.radioactivity_level == 0:
-                plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="white")
-            elif agent.radioactivity_level == 0.5:
-                plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="gray")
-            elif agent.radioactivity_level == 0.8:
-                plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="black")
+            try:
+                if agent.radioactivity_level == 0:
+                    plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="white")
+                elif agent.radioactivity_level == 0.5:
+                    plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="gray")
+                elif agent.radioactivity_level == 0.8:
+                    plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="black")
+            except:
+                print(agent)
+                raise ValueError
     for agent in test_model.agents:
-        if isinstance(agent, Waste):
+        if isinstance(agent, Waste) and agent.pos is not None:
             if agent.color_waste == 0:
                 plt.scatter(agent.pos[0], agent.pos[1], marker="o", color="green")
             elif agent.color_waste == 1:
@@ -149,7 +153,8 @@ for i in range(100):
             plt.scatter(agent.pos[0], agent.pos[1], marker="x", color="yellow")
         elif isinstance(agent, RedAgent):
             plt.scatter(agent.pos[0], agent.pos[1], marker="x", color="red")
+        #print radioactivity of neighbours
     plt.title("Step: " + str(i))
-    plt.pause(0.0001)
+    plt.pause(0.001)
     display.display(plt.gcf())
     display.clear_output(wait=True)
