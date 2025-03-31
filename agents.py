@@ -1,6 +1,9 @@
 from mesa import Agent
 import random
 
+EMPTY = -1
+WALL = 0
+
 
 class RobotAgent(Agent):
     def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
@@ -65,7 +68,7 @@ class RobotAgent(Agent):
         self.update(percepts, action)
 
 
-class GreenAgent(RobotAgent):
+class RandomGreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
         self.threshold = 1 / 3
@@ -119,7 +122,7 @@ class GreenAgent(RobotAgent):
         return self.actions_dict[action]
 
 
-class YellowAgent(RobotAgent):
+class RandomYellowAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
         self.threshold = 2 / 3
@@ -173,7 +176,7 @@ class YellowAgent(RobotAgent):
         return self.actions_dict[action]
 
 
-class RedAgent(RobotAgent):
+class RandomRedAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
         self.threshold = 1
@@ -224,3 +227,124 @@ class RedAgent(RobotAgent):
             action += "_" + self.colors_ids[self.knowledge["carried"][0]]
 
         return self.actions_dict[action]
+
+class GreenAgent(RobotAgent):
+    def __init__(self, model, knowledge):
+        super.__init__(self, model, knowledge)
+        self.treshold = 1 / 3
+        self.color_to_gather = 1  # Can only gather green wastes
+        self.begin = True
+        self.yellow_deposit_not_available = False
+
+    def random_walk(self):
+        possible_actions = []
+
+        if self.knowledge["radioactivity"][1, 2] <= self.treshold:
+            possible_actions.append("move_Right")
+
+        if self.knowledge["radioactivity"][0, 1] <= self.treshold:
+            possible_actions.append("move_Up")
+
+        if self.knowledge["radioactivity"][1, 0] <= self.treshold:
+            possible_actions.append("move_Left")
+
+        if self.knowledge["radioactivity"][2, 1] <= self.treshold:
+            possible_actions.append("move_Down")
+
+        action = random.choice(possible_actions)
+
+        return action
+
+    def is_on_yellow_deposit(self):
+        pass
+
+    def is_on_green_deposit(self):
+        pass
+
+    def is_on_correct_waste(self):
+        return self.knowledge["color_waste"][1, 1] == self.color_to_gather
+
+    def must_deliver(self):
+        return (
+            len(self.knowledge["carried"]) > 0
+            and self.knowledge["carried"][0] != self.color_to_gather
+        )
+
+    def has_one_correct_waste(self):
+        return (
+            len(self.knowledge["carried"]) > 0
+            and self.knowledge["carried"][0] == self.color_to_gather
+        )
+
+    def go_to_green_deposit(self):
+        pass  # TODO: go up until wall then right until yellow zone
+
+    def go_to_yellow_deposit(self):
+        pass  # TODO: go right until yellow zone then down until wall
+
+    def can_release(self):
+        return self.knowledge["color_waste"][1, 1] == EMPTY
+
+    def release(self):
+        return self.actions_dict[
+            "release_" + self.colors_ids[self.knowledge["carried"][0]]
+        ]
+
+    def pick(self):
+        return self.actions_dict["pick"]
+
+    def act_in_yellow_deposit(self):
+        if self.can_release():
+            return self.release()
+
+        else:
+            self.yellow_deposit_not_available = True
+            return self.deliberate()
+
+    def find_place_to_deliver(self):
+        pass
+
+    def reachable_waste(self):
+        reachable_mask = self.knowledge["radioactivity"] <= self.treshold
+        correct_wastes = self.knowledge["color_waste"] == self.color_to_gather
+        return (reachable_mask * correct_wastes).any()
+
+    def reach_waste(self):
+        if self.is_on_correct_waste():
+            return self.pick()
+        pass
+
+    def deliberate(self):
+        if self.begin:
+            if not self.is_on_yellow_deposit():
+                return self.go_to_yellow_deposit()
+            else:
+                self.begin = False
+
+        if self.must_deliver():
+            if self.yellow_deposit_not_available:
+                if self.can_release():
+                    return self.release()
+
+                else:
+                    return self.find_place_to_deliver()
+
+            elif self.is_on_yellow_deposit():
+                return self.act_in_yellow_deposit()
+
+            else:
+                return self.go_to_yellow_deposit()
+
+        self.yellow_deposit_not_available = False
+
+        if self.reachable_waste():
+            return self.reach_waste()
+
+        if self.has_one_correct_waste():
+            if self.is_on_green_deposit():
+                if self.can_release():
+                    return self.release()
+            else:
+                return self.go_to_green_deposit()
+
+        return self.random_walk()
