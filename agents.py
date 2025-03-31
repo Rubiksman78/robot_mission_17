@@ -19,11 +19,14 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
+        self.moved_up = 0
+        self.moved_right = 1
 
     def deliberate(self):
         pass
 
     def update(self, percepts, action):  # The robot picks up waste
+        # TODO Change this to remember the previous objects found in the way but not used
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -40,6 +43,19 @@ class RobotAgent(Agent):
             and percepts["success"]
         ):  # The robot drops some waste
             self.knowledge["carried"] = []
+
+        elif (
+            action
+            in [
+                self.actions_dict["move_Up"],
+                self.actions_dict["move_Right"],
+                self.actions_dict["move_Down"],
+                self.actions_dict["move_Left"],
+            ]
+            and percepts["success"]
+        ):  
+            self.knowledge["moved_up"] += action ==self.actions_dict["move_Up"] - action ==self.actions_dict["move_Down"]
+            self.knowledge["moved_right"] += action ==self.actions_dict["move_Right"] - action ==self.actions_dict["move_Left"]
 
         self.knowledge.update(percepts)
 
@@ -98,7 +114,7 @@ class GreenAgent(RobotAgent):
             action = random.choice(possible_actions)
 
         if action == "release":
-            action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
+            action +="_" + self.colors_ids[self.knowledge["carried"][0]]
 
         return self.actions_dict[action]
 
@@ -152,7 +168,7 @@ class YellowAgent(RobotAgent):
             action = random.choice(possible_actions)
 
         if action == "release":
-            action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
+            action = "_" + self.colors_ids[self.knowledge["carried"][0]]
 
         return self.actions_dict[action]
 
@@ -205,6 +221,6 @@ class RedAgent(RobotAgent):
             action = random.choice(possible_actions)
 
         if action == "release":
-            action = action + "_" + self.colors_ids[self.knowledge["carried"][0]]
+            action += "_" + self.colors_ids[self.knowledge["carried"][0]]
 
         return self.actions_dict[action]
