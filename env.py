@@ -52,8 +52,16 @@ class Environment:
                     if isinstance(agent, Waste):
                         self.grid.remove_agent(agent)
             if action in [1, 2, 3]:
-                waste_agent = Waste(self.model, color_waste=action - 1)
-                self.grid.place_agent(waste_agent, pos)
+                for agent in cell_agent:
+                    if isinstance(agent, Radioactivity):
+                        is_waste_disposal = agent.is_waste_disposal
+                if is_waste_disposal == 0:
+                    waste_agent = Waste(self.model, color_waste=action - 1)
+                    self.grid.place_agent(waste_agent, pos)
+                else:
+                    for agent in cell_agent:
+                        if isinstance(agent, Waste):
+                            self.grid.remove_agent(agent)
             elif action in [4, 5, 6, 7]:
                 if action == 4:#up
                     new_position = (pos[0], pos[1] + 1)
