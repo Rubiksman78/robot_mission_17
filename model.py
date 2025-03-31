@@ -1,11 +1,10 @@
 from mesa import Model
 from mesa.space import MultiGrid
 
-from agents import GreenAgent, YellowAgent, RedAgent, RobotAgent
+from agents import RandomGreenAgent, RandomYellowAgent, RandomRedAgent, RobotAgent
 from env import Waste, Radioactivity, Environment
 
 import numpy as np
-from IPython import display
 
 
 class RobotMission(Model):
@@ -17,12 +16,12 @@ class RobotMission(Model):
         self.grid_size = grid_size
         self.n_wastes = n_wastes
         green_agents = [
-            GreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
+            RandomGreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
         ]
         yellow_agents = [
-            YellowAgent(self, knowledge={}) for _ in range(n_agents["yellow"])
+            RandomYellowAgent(self, knowledge={}) for _ in range(n_agents["yellow"])
         ]
-        red_agents = [RedAgent(self, knowledge={}) for _ in range(n_agents["red"])]
+        red_agents = [RandomRedAgent(self, knowledge={}) for _ in range(n_agents["red"])]
         self.grid = MultiGrid(grid_size, grid_size, False)
         for agent in green_agents + yellow_agents + red_agents:
             self.place_robot_agents(agent)
@@ -32,10 +31,10 @@ class RobotMission(Model):
         self.initialize_agent()
         
     def place_robot_agents(self, agent):
-        if isinstance(agent, GreenAgent):
+        if isinstance(agent, RandomGreenAgent):
             random_x = np.random.randint(0, self.grid.width / 3)
             random_y = np.random.randint(0, self.grid.height)
-        elif isinstance(agent, YellowAgent):
+        elif isinstance(agent, RandomYellowAgent):
             random_x = np.random.randint(0, self.grid.width / 3 * 2)
             random_y = np.random.randint(0, self.grid.height)
         else:
@@ -104,6 +103,8 @@ class RobotMission(Model):
             if isinstance(agent, RobotAgent):
                 knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
+                knowledge["moved_up"] = 0
+                knowledge["moved_right"] = 0
                 agent.knowledge = knowledge
 
     def do(self, agent, action):
