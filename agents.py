@@ -10,7 +10,6 @@ WALL = 0
 class RobotAgent(Agent):
     def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
         super().__init__(model)
-        # self.id = id
         self.knowledge = knowledge
         self.colors_ids = {0: "green", 1: "yellow", 2: "red"}
         self.actions_dict = {
@@ -24,8 +23,11 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
-        self.moved_up = 0
-        self.moved_right = 1
+        #self.grid_size = self.knowledge["grid_size"]
+        self.grid_size = self.model.grid_size
+        self.grid = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+        self.color_to_gather = - 1
+
         self.green_threshold = 1 / 3
         self.yellow_threshold = 2 / 3
         self.red_threshold = 1
@@ -52,26 +54,6 @@ class RobotAgent(Agent):
         ):  # The robot drops some waste
             self.knowledge["carried"] = []
 
-        elif (
-            action
-            in [
-                self.actions_dict["move_Up"],
-                self.actions_dict["move_Right"],
-                self.actions_dict["move_Down"],
-                self.actions_dict["move_Left"],
-            ]
-            and percepts["success"]
-        ):
-            self.knowledge["moved_up"] += (
-                action
-                == self.actions_dict["move_Up"] - action
-                == self.actions_dict["move_Down"]
-            )
-            self.knowledge["moved_right"] += (
-                action
-                == self.actions_dict["move_Right"] - action
-                == self.actions_dict["move_Left"]
-            )
 
         self.knowledge.update(percepts)
 
