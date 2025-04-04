@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent
+from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent
 from env import Waste
 from model import RobotMission
 
 
-def run_batch_simu(num_simulations=10):
+def run_batch_simu(num_simulations=10, random_agents=True):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
     for _ in range(num_simulations):
         model = RobotMission(
@@ -21,15 +21,24 @@ def run_batch_simu(num_simulations=10):
                 "red": 10,
             },
             grid_size=20,
+            use_random_agents=random_agents,
         )
-        waste_counts = visualize_simulation(model)
+        waste_counts = visualize_simulation(model, steps=1000, use_random_agents=random_agents)
         for color in waste_counts:
             mean_waste_counts[color].append(waste_counts[color])
     return mean_waste_counts
 
 
-def visualize_simulation(model, steps=1000):
+def visualize_simulation(model, steps=1000, use_random_agents=True):
     waste_counts = {"green": [], "yellow": [], "red": []}
+    if use_random_agents:
+        greenagentclass = RandomGreenAgent
+        yellowagentclass = RandomYellowAgent
+        redagentclass = RandomRedAgent
+    else:
+        greenagentclass = GreenAgent
+        yellowagentclass = YellowAgent
+        # redagentclass = GreenAgent
     for step in range(steps):
         model.step()
         green_count, yellow_count, red_count = 0, 0, 0
@@ -45,12 +54,12 @@ def visualize_simulation(model, steps=1000):
                 else:
                     red_count += 1
             elif isinstance(
-                agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)
+                agent, (greenagentclass, yellowagentclass, redagentclass)
             ):
                 color = (
                     "green"
-                    if isinstance(agent, RandomGreenAgent)
-                    else "yellow" if isinstance(agent, RandomYellowAgent) else "red"
+                    if isinstance(agent, greenagentclass)
+                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
                 )
         waste_counts["green"].append(green_count)
         waste_counts["yellow"].append(yellow_count)
@@ -59,7 +68,7 @@ def visualize_simulation(model, steps=1000):
 
 
 if __name__ == "__main__":
-    mean_waste_counts = run_batch_simu()
+    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True)
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
     waste_counts_red = mean_waste_counts["red"]

@@ -232,7 +232,7 @@ class RandomRedAgent(RobotAgent):
 class GreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
-        self.color_to_gather = 1  # Can only gather green wastes
+        self.color_to_gather = 0  # Can only gather green wastes
         self.begin = True
         self.yellow_deposit_not_available = False
         self.go_up = True
@@ -274,14 +274,14 @@ class GreenAgent(RobotAgent):
     def is_on_yellow_deposit(self):
         return (
             (self.wall_map()[2, :]).all()
-            and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][:2, 2] > self.green_threshold).all()
             and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
         )
 
     def is_on_green_deposit(self):
         return (
             (self.wall_map()[0, :]).all()
-            and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][1:, 2] > self.green_threshold).all()
             and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
         )
 
@@ -381,13 +381,7 @@ class GreenAgent(RobotAgent):
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
         targets = [
-            position
-            for position in targets
-            if position
-            != [
-                len(self.knowledge["grid"]) - 1,
-                len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
-            ]
+            position for position in targets if position != self.green_deposit_position
         ]  # do not look for green waste in green deposit
         return len(targets) > 0
 
@@ -397,17 +391,13 @@ class GreenAgent(RobotAgent):
             [
                 position
                 for position in targets
-                if position
-                != [
-                    len(self.knowledge["grid"]) - 1,
-                    len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
-                ]
+                if position != self.green_deposit_position
             ]
         )  # do not look for green waste in green deposit
         if len(targets) == 0:
             return None
 
-        x, y = self.knowledge["position"]
+        x, y = self.get_pos()
 
         distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
         sorted_indices = np.lexsort(
@@ -422,11 +412,11 @@ class GreenAgent(RobotAgent):
 
         possible_actions = []
         targetx, targety = self.find_nearest_waste()
-        x, y = self.knowledge["position"]
+        x, y = self.pos
         if targetx > x:
-            possible_actions.append("move_Right")
+            possible_actions.append("move_Down")
         elif targetx < x:
-            possible_actions.append("move_Left")
+            possible_actions.append("move_Up")
         if targety > y:
             possible_actions.append("move_Right")
         elif targety < y:
@@ -440,6 +430,8 @@ class GreenAgent(RobotAgent):
             if not self.is_on_yellow_deposit():
                 return self.go_to_init_position()
             else:
+                _, y = self.get_pos()
+                self.green_deposit_position = [1, y]
                 self.begin = False
 
         if self.must_deliver():
@@ -474,7 +466,7 @@ class GreenAgent(RobotAgent):
 class YellowAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
-        self.color_to_gather = 2  # Can only gather yellow wastes
+        self.color_to_gather = 1  # Can only gather yellow wastes
         self.begin = True
         self.red_deposit_not_available = False
         self.go_up = True
@@ -516,14 +508,21 @@ class YellowAgent(RobotAgent):
     def is_on_yellow_deposit(self):
         return (
             (self.wall_map()[2, :]).all()
-            and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][:2, 2] > self.green_threshold).all()
             and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
+        )
+
+    def is_on_red_deposit(self):
+        return (
+            (self.wall_map()[2, :]).all()
+            and (self.knowledge["radioactivity"][:2, 2] > self.yellow_threshold).all()
+            and (self.knowledge["radioactivity"][:, :2] <= self.yellow_threshold).all()
         )
 
     def is_on_green_deposit(self):
         return (
             (self.wall_map()[0, :]).all()
-            and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][1:, 2] > self.green_threshold).all()
             and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
         )
 
@@ -542,23 +541,16 @@ class YellowAgent(RobotAgent):
             and self.knowledge["carried"][0] == self.color_to_gather
         )
 
-    def go_to_green_deposit(self):
-        possible_actions = []
-        if not self.wall_map()[0, 1]:
-            possible_actions.append("move_Up")
-
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
-            possible_actions.append("move_Right")
-
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
-
     def go_to_init_position(self):
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
-            action = "move_Right"
-
+        if not self.wall_map()[0, 1]:
+            if self.knowledge["radioactivity"][1, 1] <= self.green_threshold:
+                action = "move_Right"
+            elif self.knowledge["radioactivity"][1, 0] > self.green_threshold:
+                action = "move_Left"
+            else:
+                action = "move_Up"
         else:
-            action = "move_Down"
+            action = "move_Left"
 
         return self.actions_dict[action]
 
@@ -568,6 +560,20 @@ class YellowAgent(RobotAgent):
             possible_actions.append("move_Down")
 
         if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
+            possible_actions.append("move_Right")
+
+        elif self.knowledge["radioactivity"][1, 0] > self.green_threshold:
+            possible_actions.append("move_Left")
+
+        action = random.choice(possible_actions)
+        return self.actions_dict[action]
+
+    def go_to_red_deposit(self):
+        possible_actions = []
+        if not self.wall_map()[2, 1]:
+            possible_actions.append("move_Down")
+
+        if self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold:
             possible_actions.append("move_Right")
 
         action = random.choice(possible_actions)
@@ -584,12 +590,12 @@ class YellowAgent(RobotAgent):
     def pick(self):
         return self.actions_dict["pick"]
 
-    def act_in_yellow_deposit(self):
+    def act_in_red_deposit(self):
         if self.can_release():
             return self.release()
 
         else:
-            self.yellow_deposit_not_available = True
+            self.red_deposit_not_available = True
             return self.deliberate()
 
     def find_place_to_deliver(self):
@@ -600,10 +606,8 @@ class YellowAgent(RobotAgent):
                     return self.actions_dict["move_Left"]
                 else:
                     self.go_up = True
-                    self.yellow_deposit_not_available = False
-                    return (
-                        self.deliberate()
-                    )  # go back to yellow deposit and start again
+                    self.red_deposit_not_available = False
+                    return self.deliberate()  # go back to red deposit and start again
             else:
                 return self.actions_dict["move_Up"]
         else:
@@ -613,23 +617,31 @@ class YellowAgent(RobotAgent):
                     return self.actions_dict["move_Left"]
                 else:
                     self.go_up = True
-                    self.yellow_deposit_not_available = False
-                    return (
-                        self.deliberate()
-                    )  # go back to yellow deposit and start again
+                    self.red_deposit_not_available = False
+                    return self.deliberate()  # go back to red deposit and start again
             else:
                 return self.actions_dict["move_Down"]
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = [
+            position for position in targets if position != self.yellow_deposit_position
+        ]
         return len(targets) > 0
 
     def find_nearest_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = np.array(
+            [
+                position
+                for position in targets
+                if position != self.yellow_deposit_position
+            ]
+        )
         if len(targets) == 0:
             return None
 
-        x, y = self.knowledge["position"]
+        x, y = self.get_pos()
 
         distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
         sorted_indices = np.lexsort(
@@ -644,11 +656,11 @@ class YellowAgent(RobotAgent):
 
         possible_actions = []
         targetx, targety = self.find_nearest_waste()
-        x, y = self.knowledge["position"]
+        x, y = self.get_pos()
         if targetx > x:
-            possible_actions.append("move_Right")
+            possible_actions.append("move_Down")
         elif targetx < x:
-            possible_actions.append("move_Left")
+            possible_actions.append("move_Up")
         if targety > y:
             possible_actions.append("move_Right")
         elif targety < y:
@@ -659,35 +671,41 @@ class YellowAgent(RobotAgent):
 
     def deliberate(self):
         if self.begin:
-            if not self.is_on_yellow_deposit():
+            if not self.is_on_green_deposit():
                 return self.go_to_init_position()
             else:
+                _, y = self.get_pos()
+                self.yellow_deposit_position = [len(self.knowledge["grid"]) - 2, y]
                 self.begin = False
 
         if self.must_deliver():
-            if self.yellow_deposit_not_available:
-                if self.can_release() and not self.is_on_green_deposit():
+            if self.red_deposit_not_available:
+                if (
+                    self.can_release()
+                    and not self.is_on_green_deposit()
+                    and not self.is_on_yellow_deposit()
+                ):
                     return self.release()
 
                 else:
                     return self.find_place_to_deliver()
 
-            elif self.is_on_yellow_deposit():
-                return self.act_in_yellow_deposit()
+            elif self.is_on_red_deposit():
+                return self.act_in_red_deposit()
 
             else:
-                return self.go_to_yellow_deposit()
+                return self.go_to_red_deposit()
 
-        self.yellow_deposit_not_available = False
+        self.red_deposit_not_available = False
 
         if self.reachable_waste():
             return self.reach_waste()
 
         if self.has_one_correct_waste():
-            if self.is_on_green_deposit():
+            if self.is_on_yellow_deposit():
                 if self.can_release():
                     return self.release()
             else:
-                return self.go_to_green_deposit()
+                return self.go_to_yellow_deposit()
 
         return self.random_walk()
