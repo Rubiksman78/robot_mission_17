@@ -6,7 +6,7 @@ from env import Waste
 from model import RobotMission
 
 
-def run_batch_simu(num_simulations=10, random_agents=True):
+def run_batch_simu(num_simulations=10, random_agents=True, steps=1000):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
     for _ in range(num_simulations):
         model = RobotMission(
@@ -23,13 +23,13 @@ def run_batch_simu(num_simulations=10, random_agents=True):
             grid_size=20,
             use_random_agents=random_agents,
         )
-        waste_counts = visualize_simulation(model, steps=1000, use_random_agents=random_agents)
+        waste_counts = visualize_simulation(model, steps=steps, use_random_agents=random_agents)
         for color in waste_counts:
             mean_waste_counts[color].append(waste_counts[color])
     return mean_waste_counts
 
 
-def visualize_simulation(model, steps=1000, use_random_agents=True):
+def visualize_simulation(model, steps, use_random_agents):
     waste_counts = {"green": [], "yellow": [], "red": []}
     if use_random_agents:
         greenagentclass = RandomGreenAgent
@@ -68,7 +68,7 @@ def visualize_simulation(model, steps=1000, use_random_agents=True):
 
 
 if __name__ == "__main__":
-    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True)
+    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True, steps=200)
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
     waste_counts_red = mean_waste_counts["red"]
