@@ -230,7 +230,7 @@ class RandomRedAgent(RobotAgent):
 
 class GreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
+        super().__init__(model, knowledge)
         self.treshold = 1 / 3
         self.color_to_gather = 1  # Can only gather green wastes
         self.begin = True
