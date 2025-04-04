@@ -32,6 +32,10 @@ class RobotAgent(Agent):
         self.yellow_threshold = 2 / 3
         self.red_threshold = 1
 
+    def get_pos(self):
+        i,j = self.pos
+        return i+1, j+1
+
     def deliberate(self):
         pass
 
@@ -55,6 +59,10 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
 
+        i, j = self.pos[0] + 1, self.pos[1] + 1 
+
+        mask = percepts["color_waste"] == self.color_to_gather
+        self.grid[i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
         self.knowledge.update(percepts)
 
     def step(self):
