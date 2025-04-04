@@ -393,10 +393,12 @@ class GreenAgent(RobotAgent):
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = [position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]] #do not look for green waste in green deposit
         return len(targets) > 0
 
     def find_nearest_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = np.array([position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]]) #do not look for green waste in green deposit
         if len(targets) == 0:
             return None
 
