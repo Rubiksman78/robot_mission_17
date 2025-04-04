@@ -32,7 +32,8 @@ class RobotAgent(Agent):
 
     def get_pos(self):
         i,j = self.pos
-        return i+1, j+1
+        #return j+1, self.grid_size - i + 1, 
+        return j+1, i + 1, 
 
     def deliberate(self):
         pass
@@ -56,10 +57,9 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
 
-        i, j = self.pos[0] + 1, self.pos[1] + 1 
-
+        i, j = self.get_pos()
         mask = percepts["color_waste"] == self.color_to_gather
-        self.knowledge["grid"][i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
+        self.knowledge["grid"][self.grid_size - i:self.grid_size - i+3, j-1:j+2][mask] = percepts["color_waste"][mask]
         self.knowledge.update(percepts)
 
     def step(self):
