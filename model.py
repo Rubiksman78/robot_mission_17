@@ -2,28 +2,38 @@ import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
 
-from agents import GreenAgent, RandomRedAgent, YellowAgent, RobotAgent
+from agents import (RandomGreenAgent, RandomRedAgent, RandomYellowAgent,
+                    RobotAgent, YellowAgent)
 from env import Environment, Radioactivity, Waste
 
 
 class RobotMission(Model):
-    def __init__(self, n_agents, n_wastes, grid_size, seed=None):
+    def __init__(
+        self, n_agents, n_wastes, grid_size, use_random_agents=True, seed=None
+    ):
         """
         n_agents is a dict with the number of agents per color
         """
         super().__init__(seed=seed)
         self.grid_size = grid_size
         self.n_wastes = n_wastes
+        if use_random_agents:
+            self.greenagent = RandomGreenAgent
+            self.yellowagent = RandomYellowAgent
+            self.redagent = RandomRedAgent
+        else:
+            self.greenagent = RobotAgent
+            self.yellowagent = YellowAgent
+            self.redagent = RobotAgent
         green_agents = [
-            GreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
+            self.greenagent(self, knowledge={}) for _ in range(n_agents["green"])
         ]
         yellow_agents = [
-            YellowAgent(self, knowledge={}) for _ in range(n_agents["yellow"])
+            self.yellowagent(self, knowledge={}) for _ in range(n_agents["yellow"])
         ]
-        red_agents = [
-            RandomRedAgent(self, knowledge={}) for _ in range(n_agents["red"])
-        ]
+        red_agents = [self.redagent(self, knowledge={}) for _ in range(n_agents["red"])]
         self.grid = MultiGrid(grid_size, grid_size, False)
+        self.already_placed = set()
         for agent in green_agents + yellow_agents + red_agents:
             self.place_robot_agents(agent)
         self.radioactivity_map = np.zeros((grid_size, grid_size))
@@ -32,16 +42,21 @@ class RobotMission(Model):
         self.initialize_agent()
 
     def place_robot_agents(self, agent):
-        if isinstance(agent, GreenAgent):
-            random_x = np.random.randint(0, self.grid.width / 3)
-            random_y = np.random.randint(0, self.grid.height)
-        elif isinstance(agent, YellowAgent):
-            random_x = np.random.randint(0, self.grid.width / 3 * 2)
-            random_y = np.random.randint(0, self.grid.height)
-        else:
-            random_x = np.random.randint(0, self.grid.width)
-            random_y = np.random.randint(0, self.grid.height)
-        random_pos = (random_x, random_y)
+        placed = False
+        while not placed:
+            if isinstance(agent, self.greenagent):
+                random_x = np.random.randint(0, self.grid.width / 3)
+                random_y = np.random.randint(0, self.grid.height)
+            elif isinstance(agent, self.yellowagent):
+                random_x = np.random.randint(0, self.grid.width / 3 * 2)
+                random_y = np.random.randint(0, self.grid.height)
+            else:
+                random_x = np.random.randint(0, self.grid.width)
+                random_y = np.random.randint(0, self.grid.height)
+            random_pos = (random_x, random_y)
+            if random_pos not in self.already_placed:
+                self.already_placed.add(random_pos)
+                placed = True
         self.grid.place_agent(agent, random_pos)
         agent.pos = random_pos
 
@@ -81,20 +96,25 @@ class RobotMission(Model):
         wastes = green_wastes + yellow_wastes + red_wastes
         np.random.shuffle(wastes)
         for waste in wastes:
-            if waste.color_waste == 0:
-                random_x = np.random.randint(0, self.grid.width / 3)
-                random_y = np.random.randint(0, self.grid.height)
-            elif waste.color_waste == 1:
-                random_x = np.random.randint(
-                    self.grid.width / 3 + 1, self.grid.width / 3 * 2
-                )
-                random_y = np.random.randint(0, self.grid.height)
-            else:
-                random_x = np.random.randint(
-                    self.grid.width / 3 * 2 + 1, self.grid.width
-                )
-                random_y = np.random.randint(0, self.grid.height)
-            random_pos = (random_x, random_y)
+            placed = False
+            while not placed:
+                if waste.color_waste == 0:
+                    random_x = np.random.randint(0, self.grid.width / 3)
+                    random_y = np.random.randint(0, self.grid.height)
+                elif waste.color_waste == 1:
+                    random_x = np.random.randint(
+                        self.grid.width / 3 + 1, self.grid.width / 3 * 2
+                    )
+                    random_y = np.random.randint(0, self.grid.height)
+                else:
+                    random_x = np.random.randint(
+                        self.grid.width / 3 * 2 + 1, self.grid.width
+                    )
+                    random_y = np.random.randint(0, self.grid.height)
+                random_pos = (random_x, random_y)
+                if random_pos not in self.already_placed:
+                    self.already_placed.add(random_pos)
+                    placed = True
             self.grid.place_agent(waste, random_pos)
             waste.pos = random_pos
 
