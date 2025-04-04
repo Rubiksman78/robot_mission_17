@@ -31,8 +31,8 @@ class RobotAgent(Agent):
         self.red_threshold = 1
 
     def get_pos(self):
-        i,j = self.pos
-        return i+1, j+1
+        i, j = self.pos
+        return i + 1, j + 1
 
     def deliberate(self):
         pass
@@ -55,11 +55,12 @@ class RobotAgent(Agent):
         ):  # The robot drops some waste
             self.knowledge["carried"] = []
 
-
-        i, j = self.pos[0] + 1, self.pos[1] + 1 
+        i, j = self.pos[0] + 1, self.pos[1] + 1
 
         mask = percepts["color_waste"] == self.color_to_gather
-        self.knowledge["grid"][i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
+        self.knowledge["grid"][i - 1 : i + 2, j - 1 : j + 2][mask] = percepts[
+            "color_waste"
+        ][mask]
         self.knowledge.update(percepts)
 
     def step(self):
@@ -386,7 +387,7 @@ class GreenAgent(RobotAgent):
         return len(targets) > 0
 
     def find_nearest_waste(self):
-        targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
         targets = np.array(
             [
                 position
@@ -419,7 +420,7 @@ class GreenAgent(RobotAgent):
             possible_actions.append("move_Up")
         if targety > y:
             possible_actions.append("move_Right")
-        elif targety < y:
+        elif targety < y or (targety == y and y == self.green_deposit_position[1]):
             possible_actions.append("move_Left")
 
         action = random.choice(possible_actions)
@@ -427,6 +428,8 @@ class GreenAgent(RobotAgent):
 
     def deliberate(self):
         if self.begin:
+            if not self.has_one_correct_waste() and self.is_on_correct_waste():
+                return self.pick()
             if not self.is_on_yellow_deposit():
                 return self.go_to_init_position()
             else:
@@ -625,17 +628,19 @@ class YellowAgent(RobotAgent):
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
         targets = [
-            position for position in targets if position != self.yellow_deposit_position
+            position
+            for position in targets
+            if (position != self.yellow_deposit_position).any()
         ]
         return len(targets) > 0
 
     def find_nearest_waste(self):
-        targets = np.argwhere(self.knowledge["grid"] == 1)
+        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
         targets = np.array(
             [
                 position
                 for position in targets
-                if position != self.yellow_deposit_position
+                if (position != self.yellow_deposit_position).any()
             ]
         )
         if len(targets) == 0:
@@ -661,7 +666,7 @@ class YellowAgent(RobotAgent):
             possible_actions.append("move_Down")
         elif targetx < x:
             possible_actions.append("move_Up")
-        if targety > y:
+        if targety > y or (targety == y and y == self.yellow_deposit_position[1] + 1):
             possible_actions.append("move_Right")
         elif targety < y:
             possible_actions.append("move_Left")
@@ -670,6 +675,7 @@ class YellowAgent(RobotAgent):
         return self.actions_dict[action]
 
     def deliberate(self):
+        print(self.knowledge["grid"])
         if self.begin:
             if not self.is_on_green_deposit():
                 return self.go_to_init_position()
