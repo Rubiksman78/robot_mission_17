@@ -1,6 +1,7 @@
+import random
+
 import numpy as np
 from mesa import Agent
-import random
 
 EMPTY = -1
 WALL = 0
@@ -251,7 +252,7 @@ class GreenAgent(RobotAgent):
 
     def random_walk(self):
         possible_actions = []
-    
+
         if (
             self.knowledge["radioactivity"][1, 2] <= self.green_threshold
             and not self.wall_map()[1, 2]

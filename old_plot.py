@@ -1,7 +1,8 @@
-from model import RobotMission
-from env import Radioactivity, Waste
-from agents import GreenAgent, YellowAgent, RedAgent
 from IPython import display
+
+from agents import GreenAgent, RedAgent, YellowAgent
+from env import Radioactivity, Waste
+from model import RobotMission
 
 test_model = RobotMission(
     {"green": 2, "yellow": 3, "red": 2},
@@ -53,7 +54,7 @@ for i in range(100):
             plt.scatter(agent.pos[0], agent.pos[1], marker="x", color="yellow")
         elif isinstance(agent, RedAgent):
             plt.scatter(agent.pos[0], agent.pos[1], marker="x", color="red")
-        #print radioactivity of neighbours
+        # print radioactivity of neighbours
     plt.title("Step: " + str(i))
     plt.pause(0.001)
     display.display(plt.gcf())
