@@ -40,3 +40,5 @@ To display an average of the wastes evolution for a large number of simulations,
 python batch_simulation.py
 ```
 The UI and rendering of the grid will be disabled and a final plot will be displayed at the end of the simulations.
+
+![batch_image](images/batch_image.png)

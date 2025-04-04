@@ -68,7 +68,7 @@ def visualize_simulation(model, steps, use_random_agents):
 
 
 if __name__ == "__main__":
-    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True, steps=100)
+    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True, steps=200)
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
     waste_counts_red = mean_waste_counts["red"]
