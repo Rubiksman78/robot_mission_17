@@ -111,16 +111,16 @@ class RandomGreenAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Down")
 
         if len(possible_actions) == 0:
@@ -165,16 +165,16 @@ class RandomYellowAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Down")
 
         if len(possible_actions) == 0:
@@ -218,16 +218,16 @@ class RandomRedAgent(RobotAgent):
                 "release_" + self.colors_ids[self.knowledge["carried"][0]]
             )
 
-        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Right")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
             possible_actions.append("move_Left")
 
-        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
             possible_actions.append("move_Down")
 
         if len(possible_actions) == 0:
@@ -294,6 +294,7 @@ class GreenAgent(RobotAgent):
         return (
             (self.wall_map()[0, :]).all()
             and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
         )
 
     def is_on_correct_waste(self):
@@ -515,6 +516,7 @@ class YellowAgent(RobotAgent):
         return (
             (self.wall_map()[0, :]).all()
             and (self.knowledge["radioactivity"][:, 2] > self.green_threshold).all()
+            and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
         )
 
     def is_on_correct_waste(self):
