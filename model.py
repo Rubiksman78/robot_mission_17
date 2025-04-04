@@ -3,7 +3,7 @@ from mesa import Model
 from mesa.space import MultiGrid
 
 from agents import (RandomGreenAgent, RandomRedAgent, RandomYellowAgent,
-                    RobotAgent, YellowAgent)
+                    RobotAgent, YellowAgent, GreenAgent)
 from env import Environment, Radioactivity, Waste
 
 
@@ -22,9 +22,9 @@ class RobotMission(Model):
             self.yellowagent = RandomYellowAgent
             self.redagent = RandomRedAgent
         else:
-            self.greenagent = RobotAgent
+            self.greenagent = GreenAgent
             self.yellowagent = YellowAgent
-            self.redagent = RobotAgent
+            self.redagent = RandomRedAgent
         green_agents = [
             self.greenagent(self, knowledge={}) for _ in range(n_agents["green"])
         ]

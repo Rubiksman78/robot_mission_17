@@ -21,7 +21,7 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
     else:
         greenagentclass = GreenAgent
         yellowagentclass = YellowAgent
-        # redagentclass = GreenAgent
+        redagentclass = RandomRedAgent
 
     for step in range(steps):
         model.step()
