@@ -126,8 +126,7 @@ class RobotMission(Model):
             if isinstance(agent, RobotAgent):
                 knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
-                knowledge["moved_up"] = 0
-                knowledge["moved_right"] = 0
+                knowledge["grid"] = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
                 agent.knowledge = knowledge
 
     def do(self, agent, action):

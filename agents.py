@@ -23,9 +23,7 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
-        # self.grid_size = self.knowledge["grid_size"]
         self.grid_size = self.model.grid_size
-        self.grid = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
         self.color_to_gather = -1
 
         self.green_threshold = 1 / 3
@@ -39,8 +37,7 @@ class RobotAgent(Agent):
     def deliberate(self):
         pass
 
-    def update(self, percepts, action):  # The robot picks up waste
-        # TODO Change this to remember the previous objects found in the way but not used
+    def update(self, percepts, action):
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -62,7 +59,7 @@ class RobotAgent(Agent):
         i, j = self.pos[0] + 1, self.pos[1] + 1 
 
         mask = percepts["color_waste"] == self.color_to_gather
-        self.grid[i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
+        self.knowledge["grid"][i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
         self.knowledge.update(percepts)
 
     def step(self):
