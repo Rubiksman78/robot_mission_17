@@ -3,17 +3,21 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 
-from agents import GreenAgent, RandomRedAgent, RandomYellowAgent
+from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent
 from env import Waste
 from model import RobotMission
 
 
 def visualize_simulation(model, steps=50):
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    ax, ax_right = axes
+
+    waste_counts = {"green": [], "yellow": [], "red": []}
 
     for step in range(steps):
         model.step()
         ax.clear()
+        ax_right.clear()
 
         # Draw heatmap for radioactivity
         cmap = mcolors.ListedColormap(
@@ -26,10 +30,19 @@ def visualize_simulation(model, steps=50):
             model.radioactivity_map, cmap=cmap, norm=norm, origin="upper", alpha=0.6
         )
 
+        # Track waste counts
+        green_count, yellow_count, red_count = 0, 0, 0
+
         # Draw waste and robot agents
         for agent in model.agents:
             if isinstance(agent, Waste) and agent.pos is not None:
                 color = ["green", "yellow", "red"][agent.color_waste]
+                if color == "green":
+                    green_count += 1
+                elif color == "yellow":
+                    yellow_count += 1
+                else:
+                    red_count += 1
                 ax.scatter(
                     agent.pos[0],
                     agent.pos[1],
@@ -39,10 +52,12 @@ def visualize_simulation(model, steps=50):
                     s=100,
                     alpha=0.5,
                 )
-            elif isinstance(agent, (GreenAgent, RandomYellowAgent, RandomRedAgent)):
+            elif isinstance(
+                agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)
+            ):
                 color = (
                     "green"
-                    if isinstance(agent, GreenAgent)
+                    if isinstance(agent, RandomGreenAgent)
                     else "yellow" if isinstance(agent, RandomYellowAgent) else "red"
                 )
                 ax.scatter(
@@ -54,11 +69,26 @@ def visualize_simulation(model, steps=50):
                     s=100,
                 )
 
+        # Update waste count history
+        waste_counts["green"].append(green_count)
+        waste_counts["yellow"].append(yellow_count)
+        waste_counts["red"].append(red_count)
+
+        # Plot waste count trends
+        ax_right.plot(waste_counts["green"], color="green", label="Green Waste")
+        ax_right.plot(waste_counts["yellow"], color="yellow", label="Yellow Waste")
+        ax_right.plot(waste_counts["red"], color="red", label="Red Waste")
+        ax_right.set_title("Waste Counts Over Time")
+        ax_right.set_xlabel("Steps")
+        ax_right.set_ylabel("Count")
+        ax_right.legend()
+
         ax.set_xlim(-0.5, model.grid_size - 0.5)
         ax.set_ylim(-0.5, model.grid_size - 0.5)
         ax.set_xticks(range(model.grid_size))
         ax.set_yticks(range(model.grid_size))
         ax.set_title(f"Step: {step}")
+
         plt.pause(0.2)
 
 
@@ -76,6 +106,7 @@ def start_gui():
                 "red": red_waste_var.get(),
             },
             grid_size=grid_size_var.get(),
+            use_random_agents=use_random_agents.get(),
         )
         visualize_simulation(model, steps=steps_var.get())
 
@@ -83,7 +114,7 @@ def start_gui():
     root.title("Simulation Settings")
 
     tk.Label(root, text="Number of Steps").pack()
-    steps_var = tk.IntVar(value=50)
+    steps_var = tk.IntVar(value=100)
     tk.Scale(root, from_=1, to=100, orient=tk.HORIZONTAL, variable=steps_var).pack()
 
     tk.Label(root, text="Grid Size").pack()
@@ -93,6 +124,12 @@ def start_gui():
     green_var = tk.IntVar(value=3)
     yellow_var = tk.IntVar(value=3)
     red_var = tk.IntVar(value=3)
+    use_random_agents = tk.BooleanVar(value=True)
+
+    tk.Label(root, text="Use Random Agents").pack()
+    tk.Checkbutton(
+        root, variable=use_random_agents, onvalue=True, offvalue=False
+    ).pack()
 
     tk.Label(root, text="Green Robots").pack()
     tk.Scale(root, from_=0, to=20, orient=tk.HORIZONTAL, variable=green_var).pack()
@@ -103,9 +140,9 @@ def start_gui():
     tk.Label(root, text="Red Robots").pack()
     tk.Scale(root, from_=0, to=20, orient=tk.HORIZONTAL, variable=red_var).pack()
 
-    green_waste_var = tk.IntVar(value=5)
-    yellow_waste_var = tk.IntVar(value=5)
-    red_waste_var = tk.IntVar(value=5)
+    green_waste_var = tk.IntVar(value=10)
+    yellow_waste_var = tk.IntVar(value=10)
+    red_waste_var = tk.IntVar(value=10)
 
     tk.Label(root, text="Green Waste").pack()
     tk.Scale(

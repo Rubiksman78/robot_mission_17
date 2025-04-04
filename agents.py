@@ -23,10 +23,10 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
-        #self.grid_size = self.knowledge["grid_size"]
+        # self.grid_size = self.knowledge["grid_size"]
         self.grid_size = self.model.grid_size
         self.grid = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
-        self.color_to_gather = - 1
+        self.color_to_gather = -1
 
         self.green_threshold = 1 / 3
         self.yellow_threshold = 2 / 3
@@ -108,7 +108,7 @@ class RandomGreenAgent(RobotAgent):
         if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Left")
 
         if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
@@ -162,7 +162,7 @@ class RandomYellowAgent(RobotAgent):
         if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Left")
 
         if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
@@ -215,7 +215,7 @@ class RandomRedAgent(RobotAgent):
         if 0 <= self.knowledge["radioactivity"][0, 1] <= self.threshold:
             possible_actions.append("move_Up")
 
-        if 0 <= self.knowledge["radioactivity"][1, 2] <= self.threshold:
+        if 0 <= self.knowledge["radioactivity"][1, 0] <= self.threshold:
             possible_actions.append("move_Left")
 
         if 0 <= self.knowledge["radioactivity"][2, 1] <= self.threshold:
@@ -383,12 +383,30 @@ class GreenAgent(RobotAgent):
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
-        targets = [position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]] #do not look for green waste in green deposit
+        targets = [
+            position
+            for position in targets
+            if position
+            != [
+                len(self.knowledge["grid"]) - 1,
+                len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
+            ]
+        ]  # do not look for green waste in green deposit
         return len(targets) > 0
 
     def find_nearest_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
-        targets = np.array([position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]]) #do not look for green waste in green deposit
+        targets = np.array(
+            [
+                position
+                for position in targets
+                if position
+                != [
+                    len(self.knowledge["grid"]) - 1,
+                    len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
+                ]
+            ]
+        )  # do not look for green waste in green deposit
         if len(targets) == 0:
             return None
 
