@@ -3,16 +3,25 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 
-from agents import GreenAgent, RandomRedAgent, YellowAgent
+from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent
 from env import Waste
 from model import RobotMission
 
 
-def visualize_simulation(model, steps=50):
+def visualize_simulation(model, steps=500, use_random_agents=True):
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))
     ax, ax_right = axes
 
     waste_counts = {"green": [], "yellow": [], "red": []}
+
+    if use_random_agents:
+        greenagentclass = RandomGreenAgent
+        yellowagentclass = RandomYellowAgent
+        redagentclass = RandomRedAgent
+    else:
+        greenagentclass = GreenAgent
+        yellowagentclass = YellowAgent
+        # redagentclass = GreenAgent
 
     for step in range(steps):
         model.step()
@@ -52,13 +61,13 @@ def visualize_simulation(model, steps=50):
                     s=100,
                     alpha=0.5,
                 )
-            elif isinstance(agent, (GreenAgent, YellowAgent, RandomRedAgent)):
+            elif isinstance(
+                agent, (greenagentclass, yellowagentclass, redagentclass)
+            ):
                 color = (
                     "green"
-                    if isinstance(agent, GreenAgent)
-                    else "yellow"
-                    if isinstance(agent, YellowAgent)
-                    else "red"
+                    if isinstance(agent, greenagentclass)
+                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
                 )
                 ax.scatter(
                     agent.pos[0],
@@ -108,7 +117,7 @@ def start_gui():
             grid_size=grid_size_var.get(),
             use_random_agents=use_random_agents.get(),
         )
-        visualize_simulation(model, steps=steps_var.get())
+        visualize_simulation(model, steps=steps_var.get(), use_random_agents=use_random_agents.get())
 
     root = tk.Tk()
     root.title("Simulation Settings")
