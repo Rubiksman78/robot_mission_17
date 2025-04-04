@@ -17,7 +17,7 @@ To open the GUI and run single simulations, execute:
 python run.py
 ```
 
-The Tkinter UI allows to enter some parameters for the simulatio such as:
+The Tkinter UI allows to enter some parameters for the simulation such as:
 - Number of simulation steps
 - Size of the grid
 - Randomness of agents: if the robots are acting with a random policy or with the implemented heuristic
@@ -25,9 +25,12 @@ The Tkinter UI allows to enter some parameters for the simulatio such as:
 - Number of wastes per color
 
 
-
 Click on `Run simulation` to start once you are satisfied with the parameters given.
+
 A window with the simulation and a plot of the number of wastes will be displayed. To close it, simply click on the top-right cross.
+
+![image](images/image.png)
+
 Click on `Close simulation` in the UI to stop the script or run it again to make another simulation.
 
 ## Batch simulation :chart_with_upwards_trend:
