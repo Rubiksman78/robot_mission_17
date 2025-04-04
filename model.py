@@ -1,10 +1,9 @@
+import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
 
-from agents import RandomGreenAgent, RandomYellowAgent, RandomRedAgent, RobotAgent
-from env import Waste, Radioactivity, Environment
-
-import numpy as np
+from agents import GreenAgent, RandomRedAgent, RandomYellowAgent, RobotAgent
+from env import Environment, Radioactivity, Waste
 
 
 class RobotMission(Model):
@@ -16,12 +15,14 @@ class RobotMission(Model):
         self.grid_size = grid_size
         self.n_wastes = n_wastes
         green_agents = [
-            RandomGreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
+            GreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
         ]
         yellow_agents = [
             RandomYellowAgent(self, knowledge={}) for _ in range(n_agents["yellow"])
         ]
-        red_agents = [RandomRedAgent(self, knowledge={}) for _ in range(n_agents["red"])]
+        red_agents = [
+            RandomRedAgent(self, knowledge={}) for _ in range(n_agents["red"])
+        ]
         self.grid = MultiGrid(grid_size, grid_size, False)
         for agent in green_agents + yellow_agents + red_agents:
             self.place_robot_agents(agent)
@@ -29,9 +30,9 @@ class RobotMission(Model):
         self.place_cell_agents()
         self.env = Environment(self, self.grid)
         self.initialize_agent()
-        
+
     def place_robot_agents(self, agent):
-        if isinstance(agent, RandomGreenAgent):
+        if isinstance(agent, GreenAgent):
             random_x = np.random.randint(0, self.grid.width / 3)
             random_y = np.random.randint(0, self.grid.height)
         elif isinstance(agent, RandomYellowAgent):
@@ -45,7 +46,7 @@ class RobotMission(Model):
         agent.pos = random_pos
 
     def place_cell_agents(self):
-        #Place radioactivity
+        # Place radioactivity
         for i in range(self.grid.width):
             for j in range(self.grid.height):
                 pos = (i, j)
@@ -57,7 +58,7 @@ class RobotMission(Model):
                 else:
                     level = 0.8
                 level_plot = level
-                #add a 2*5 waste zone right
+                # add a 2*5 waste zone right
                 if (
                     self.grid.width - 2 <= i < self.grid.width
                     and j > (self.grid.height / 2) - 2
@@ -69,7 +70,7 @@ class RobotMission(Model):
                 self.radioactivity_map[j, i] = level_plot
                 self.grid.place_agent(radioactivity, pos)
                 radioactivity.pos = pos
-        #Place wastes randomly
+        # Place wastes randomly
         green_wastes = [
             Waste(self, color_waste=0) for _ in range(self.n_wastes["green"])
         ]
@@ -89,7 +90,9 @@ class RobotMission(Model):
                 )
                 random_y = np.random.randint(0, self.grid.height)
             else:
-                random_x = np.random.randint(self.grid.width / 3 * 2 + 1, self.grid.width)
+                random_x = np.random.randint(
+                    self.grid.width / 3 * 2 + 1, self.grid.width
+                )
                 random_y = np.random.randint(0, self.grid.height)
             random_pos = (random_x, random_y)
             self.grid.place_agent(waste, random_pos)

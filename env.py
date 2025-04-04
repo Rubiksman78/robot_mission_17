@@ -1,6 +1,7 @@
 import numpy as np
 from mesa import Agent, Model
 from mesa.space import MultiGrid
+
 from agents import RobotAgent
 
 ACTIONS_DICT = {
@@ -40,7 +41,9 @@ class Environment:
         # called in model.do
         # desired output is [radioactivity_level 3*3, color_waste 3*3, is_waste_disposal 3*3, is_wall 3*3, other_robots 3*3, success]
         pos = agent.pos
-        cell_agent = self.grid.get_cell_list_contents(pos)  # get agents at the same pos as the robot (Waste+Radioactivity)
+        cell_agent = self.grid.get_cell_list_contents(
+            pos
+        )  # get agents at the same pos as the robot (Waste+Radioactivity)
         # neighbours = self.grid.get_neighborhood(pos, moore=True, include_center=False)
         observation = self.get_info(pos)
         success = observation["success"]
@@ -63,13 +66,13 @@ class Environment:
                         if isinstance(agent, Waste):
                             self.grid.remove_agent(agent)
             elif action in [4, 5, 6, 7]:
-                if action == 4:#up
+                if action == 4:  # up
                     new_position = (pos[0], pos[1] + 1)
-                elif action == 5:#right
+                elif action == 5:  # right
                     new_position = (pos[0] + 1, pos[1])
-                elif action == 6:#down
-                    new_position = (pos[0], pos[1] -1)
-                elif action == 7:#left
+                elif action == 6:  # down
+                    new_position = (pos[0], pos[1] - 1)
+                elif action == 7:  # left
                     new_position = (pos[0] - 1, pos[1])
                 agent_newpos = self.grid.get_cell_list_contents(new_position)
                 agent_already_here = False
@@ -89,8 +92,8 @@ class Environment:
 
     def get_info(self, pos):
         # Get information from neighbouts
-        radioactivity_level = np.zeros((3, 3))-1
-        color_waste = np.zeros((3, 3))-1
+        radioactivity_level = np.zeros((3, 3)) - 1
+        color_waste = np.zeros((3, 3)) - 1
         is_waste_disposal = np.zeros((3, 3)) - 1
         is_wall = np.zeros((3, 3))
         other_robots = np.zeros((3, 3))
@@ -109,7 +112,7 @@ class Environment:
                     radioactivity_agent = agent
                 elif isinstance(agent, RobotAgent):
                     robot_agent = agent
-            #compute position in the 3*3 matrix while considering edges
+            # compute position in the 3*3 matrix while considering edges
             x_neigh, y_neigh = neighbour
             x = (x_neigh - pos[0] + 1) % 3
             y = (y_neigh - pos[1] + 1) % 3
@@ -121,6 +124,10 @@ class Environment:
             if robot_agent is not None:
                 other_robots[x][y] = 1
         color_waste = color_waste.astype(int)
+        radioactivity_level = np.rot90(radioactivity_level)
+        is_waste_disposal = np.rot90(is_waste_disposal)
+        is_wall = np.rot90(is_wall)
+        other_robots = np.rot90(other_robots)
         observation = {
             "radioactivity": radioactivity_level,
             "color_waste": color_waste,
