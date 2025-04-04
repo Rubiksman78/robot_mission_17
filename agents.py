@@ -1,5 +1,6 @@
 from mesa import Agent
 import random
+import numpy as np
 
 EMPTY = -1
 WALL = 0
@@ -8,7 +9,6 @@ WALL = 0
 class RobotAgent(Agent):
     def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
         super().__init__(model)
-        # self.id = id
         self.knowledge = knowledge
         self.colors_ids = {0: "green", 1: "yellow", 2: "red"}
         self.actions_dict = {
@@ -22,8 +22,10 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
-        self.moved_up = 0
-        self.moved_right = 1
+        #self.grid_size = self.knowledge["grid_size"]
+        self.grid_size = self.model.grid_size
+        self.grid = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+        self.color_to_gather = - 1
 
     def deliberate(self):
         pass
@@ -47,7 +49,7 @@ class RobotAgent(Agent):
         ):  # The robot drops some waste
             self.knowledge["carried"] = []
 
-        elif (
+        '''elif (
             action
             in [
                 self.actions_dict["move_Up"],
@@ -57,9 +59,22 @@ class RobotAgent(Agent):
             ]
             and percepts["success"]
         ):  
-            self.knowledge["moved_up"] += action ==self.actions_dict["move_Up"] - action ==self.actions_dict["move_Down"]
-            self.knowledge["moved_right"] += action ==self.actions_dict["move_Right"] - action ==self.actions_dict["move_Left"]
+            if action == self.actions_dict["move_Up"]:
+                self.knowledge["position"][0] += 1 
+            elif action == self.actions_dict["move_Down"]:
+                self.knowledge["position"][0] += -1
+            elif action == self.actions_dict["move_Right"]:
+                self.knowledge["position"][1] += 1
+            else:
+                self.knowledge["position"][1] += -1'''
 
+        #update known environment
+        i, j = self.pos
+        i+=1
+        j+=1
+        mask = percepts["color_waste"] == self.color_to_gather
+
+        self.grid[i-1:i+2, j-1:j+2][mask] = percepts["color_waste"][mask]
         self.knowledge.update(percepts)
 
     def step(self):
@@ -230,7 +245,7 @@ class RandomRedAgent(RobotAgent):
 
 class GreenAgent(RobotAgent):
     def __init__(self, model, knowledge):
-        super.__init__(self, model, knowledge)
+        super.__init__(model, knowledge)
         self.treshold = 1 / 3
         self.color_to_gather = 1  # Can only gather green wastes
         self.begin = True
