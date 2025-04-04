@@ -1,14 +1,12 @@
-import tkinter as tk
-
 import matplotlib.pyplot as plt
-from matplotlib import colors as mcolors
 import numpy as np
 
 from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent
 from env import Waste
 from model import RobotMission
 
-def run_batch_simu(num_simulations=20):
+
+def run_batch_simu(num_simulations=10):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
     for _ in range(num_simulations):
         model = RobotMission(
@@ -29,12 +27,13 @@ def run_batch_simu(num_simulations=20):
             mean_waste_counts[color].append(waste_counts[color])
     return mean_waste_counts
 
-def visualize_simulation(model, steps=200):    
+
+def visualize_simulation(model, steps=1000):
     waste_counts = {"green": [], "yellow": [], "red": []}
     for step in range(steps):
         model.step()
         green_count, yellow_count, red_count = 0, 0, 0
-        
+
         # Draw waste and robot agents
         for agent in model.agents:
             if isinstance(agent, Waste) and agent.pos is not None:
@@ -45,7 +44,9 @@ def visualize_simulation(model, steps=200):
                     yellow_count += 1
                 else:
                     red_count += 1
-            elif isinstance(agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)):
+            elif isinstance(
+                agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)
+            ):
                 color = (
                     "green"
                     if isinstance(agent, RandomGreenAgent)
@@ -67,9 +68,24 @@ if __name__ == "__main__":
     mean_waste_counts_yellow = np.mean(waste_counts_yellow, axis=0)
     mean_waste_counts_red = np.mean(waste_counts_red, axis=0)
 
-    plt.plot(range(len(mean_waste_counts_green)), mean_waste_counts_green, label="green", color="green")
-    plt.plot(range(len(mean_waste_counts_yellow)), mean_waste_counts_yellow, label="yellow", color="yellow")
-    plt.plot(range(len(mean_waste_counts_red)), mean_waste_counts_red, label="red", color="red")
+    plt.plot(
+        range(len(mean_waste_counts_green)),
+        mean_waste_counts_green,
+        label="green",
+        color="green",
+    )
+    plt.plot(
+        range(len(mean_waste_counts_yellow)),
+        mean_waste_counts_yellow,
+        label="yellow",
+        color="yellow",
+    )
+    plt.plot(
+        range(len(mean_waste_counts_red)),
+        mean_waste_counts_red,
+        label="red",
+        color="red",
+    )
 
     plt.xlabel("Step")
     plt.ylabel("Waste Count")

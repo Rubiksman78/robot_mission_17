@@ -11,18 +11,18 @@ from model import RobotMission
 def visualize_simulation(model, steps=50):
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))
     ax, ax_right = axes
-    
+
     waste_counts = {"green": [], "yellow": [], "red": []}
-    
+
     for step in range(steps):
         model.step()
         ax.clear()
         ax_right.clear()
 
         # Draw heatmap for radioactivity
-        cmap = mcolors.ListedColormap([
-            "lightgreen", "lightyellow", "lightcoral", "black"
-        ])
+        cmap = mcolors.ListedColormap(
+            ["lightgreen", "lightyellow", "lightcoral", "black"]
+        )
         bounds = [0, 0.1, 0.6, 1.5, 2.1]  # Define thresholds for different levels
         norm = mcolors.BoundaryNorm(bounds, cmap.N)
 
@@ -32,7 +32,7 @@ def visualize_simulation(model, steps=50):
 
         # Track waste counts
         green_count, yellow_count, red_count = 0, 0, 0
-        
+
         # Draw waste and robot agents
         for agent in model.agents:
             if isinstance(agent, Waste) and agent.pos is not None:
@@ -52,7 +52,9 @@ def visualize_simulation(model, steps=50):
                     s=100,
                     alpha=0.5,
                 )
-            elif isinstance(agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)):
+            elif isinstance(
+                agent, (RandomGreenAgent, RandomYellowAgent, RandomRedAgent)
+            ):
                 color = (
                     "green"
                     if isinstance(agent, RandomGreenAgent)
@@ -86,7 +88,7 @@ def visualize_simulation(model, steps=50):
         ax.set_xticks(range(model.grid_size))
         ax.set_yticks(range(model.grid_size))
         ax.set_title(f"Step: {step}")
-        
+
         plt.pause(0.2)
 
 
@@ -104,6 +106,7 @@ def start_gui():
                 "red": red_waste_var.get(),
             },
             grid_size=grid_size_var.get(),
+            use_random_agents=use_random_agents.get(),
         )
         visualize_simulation(model, steps=steps_var.get())
 
@@ -121,6 +124,12 @@ def start_gui():
     green_var = tk.IntVar(value=3)
     yellow_var = tk.IntVar(value=3)
     red_var = tk.IntVar(value=3)
+    use_random_agents = tk.BooleanVar(value=True)
+
+    tk.Label(root, text="Use Random Agents").pack()
+    tk.Checkbutton(
+        root, variable=use_random_agents, onvalue=True, offvalue=False
+    ).pack()
 
     tk.Label(root, text="Green Robots").pack()
     tk.Scale(root, from_=0, to=20, orient=tk.HORIZONTAL, variable=green_var).pack()

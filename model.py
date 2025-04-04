@@ -3,27 +3,35 @@ from mesa import Model
 from mesa.space import MultiGrid
 
 from agents import (RandomGreenAgent, RandomRedAgent, RandomYellowAgent,
-                    RobotAgent)
+                    RobotAgent, YellowAgent)
 from env import Environment, Radioactivity, Waste
 
 
 class RobotMission(Model):
-    def __init__(self, n_agents, n_wastes, grid_size, seed=None):
+    def __init__(
+        self, n_agents, n_wastes, grid_size, use_random_agents=True, seed=None
+    ):
         """
         n_agents is a dict with the number of agents per color
         """
         super().__init__(seed=seed)
         self.grid_size = grid_size
         self.n_wastes = n_wastes
+        if use_random_agents:
+            self.greenagent = RandomGreenAgent
+            self.yellowagent = RandomYellowAgent
+            self.redagent = RandomRedAgent
+        else:
+            self.greenagent = RobotAgent
+            self.yellowagent = YellowAgent
+            self.redagent = RobotAgent
         green_agents = [
-            RandomGreenAgent(self, knowledge={}) for _ in range(n_agents["green"])
+            self.greenagent(self, knowledge={}) for _ in range(n_agents["green"])
         ]
         yellow_agents = [
-            RandomYellowAgent(self, knowledge={}) for _ in range(n_agents["yellow"])
+            self.yellowagent(self, knowledge={}) for _ in range(n_agents["yellow"])
         ]
-        red_agents = [
-            RandomRedAgent(self, knowledge={}) for _ in range(n_agents["red"])
-        ]
+        red_agents = [self.redagent(self, knowledge={}) for _ in range(n_agents["red"])]
         self.grid = MultiGrid(grid_size, grid_size, False)
         self.already_placed = set()
         for agent in green_agents + yellow_agents + red_agents:
@@ -36,10 +44,10 @@ class RobotMission(Model):
     def place_robot_agents(self, agent):
         placed = False
         while not placed:
-            if isinstance(agent, RandomGreenAgent):
+            if isinstance(agent, self.greenagent):
                 random_x = np.random.randint(0, self.grid.width / 3)
                 random_y = np.random.randint(0, self.grid.height)
-            elif isinstance(agent, RandomYellowAgent):
+            elif isinstance(agent, self.yellowagent):
                 random_x = np.random.randint(0, self.grid.width / 3 * 2)
                 random_y = np.random.randint(0, self.grid.height)
             else:
