@@ -23,10 +23,10 @@ class RobotAgent(Agent):
             "move_Left": 7,
             "nothing": 8,
         }
-        #self.grid_size = self.knowledge["grid_size"]
+        # self.grid_size = self.knowledge["grid_size"]
         self.grid_size = self.model.grid_size
         self.grid = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
-        self.color_to_gather = - 1
+        self.color_to_gather = -1
 
         self.green_threshold = 1 / 3
         self.yellow_threshold = 2 / 3
@@ -53,7 +53,6 @@ class RobotAgent(Agent):
             and percepts["success"]
         ):  # The robot drops some waste
             self.knowledge["carried"] = []
-
 
         self.knowledge.update(percepts)
 
@@ -375,12 +374,30 @@ class GreenAgent(RobotAgent):
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
-        targets = [position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]] #do not look for green waste in green deposit
+        targets = [
+            position
+            for position in targets
+            if position
+            != [
+                len(self.knowledge["grid"]) - 1,
+                len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
+            ]
+        ]  # do not look for green waste in green deposit
         return len(targets) > 0
 
     def find_nearest_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
-        targets = np.array([position for position in targets if position != [len(self.knowledge["grid"])-1, len([self.knowledge["grid"][len(self.knowledge["grid"])-1]])-1]]) #do not look for green waste in green deposit
+        targets = np.array(
+            [
+                position
+                for position in targets
+                if position
+                != [
+                    len(self.knowledge["grid"]) - 1,
+                    len([self.knowledge["grid"][len(self.knowledge["grid"]) - 1]]) - 1,
+                ]
+            ]
+        )  # do not look for green waste in green deposit
         if len(targets) == 0:
             return None
 
