@@ -121,6 +121,10 @@ class Environment:
             if robot_agent is not None:
                 other_robots[x][y] = 1
         color_waste = color_waste.astype(int)
+        radioactivity_level = np.rot90(radioactivity_level)
+        is_waste_disposal = np.rot90(is_waste_disposal)
+        is_wall = np.rot90(is_wall)
+        other_robots = np.rot90(other_robots)
         observation = {
             "radioactivity": radioactivity_level,
             "color_waste": color_waste,
