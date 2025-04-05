@@ -58,7 +58,7 @@ class RobotAgent(Agent):
 
 
         i, j = self.get_pos()
-        mask = percepts["color_waste"] == self.color_to_gather
+        mask = np.isin(percepts["color_waste"], [self.color_to_gather, -1])
         self.knowledge["grid"][self.grid_size - i:self.grid_size - i+3, j-1:j+2][mask] = percepts["color_waste"][mask]
         self.knowledge.update(percepts)
 
