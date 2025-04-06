@@ -42,3 +42,26 @@ python batch_simulation.py
 The UI and rendering of the grid will be disabled and a final plot will be displayed at the end of the simulations.
 
 ![batch_image](images/batch_image.png)
+
+## Explications :memo:
+
+### Architecture chosen
+
+Agents used:
+- RobotAgent: GreenAgent, YellowAgent, RedAgent
+- WasteAgent
+- RadioactivityAgent
+
+Environnement
+ 
+Model
+
+### Comportement des agents
+
+Random Behaviour
+
+Implemented heuristic
+
+### Analyse des résultats
+
+Comparison of the two agent modes

@@ -625,7 +625,7 @@ class YellowAgent(RobotAgent):
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == 1)
         targets = [
-            position for position in targets if position != self.yellow_deposit_position
+            position for position in targets if set(position) != set(self.yellow_deposit_position)
         ]
         return len(targets) > 0
 
@@ -635,7 +635,7 @@ class YellowAgent(RobotAgent):
             [
                 position
                 for position in targets
-                if position != self.yellow_deposit_position
+                if set(position) != set(self.yellow_deposit_position)
             ]
         )
         if len(targets) == 0:
