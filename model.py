@@ -2,8 +2,15 @@ import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
 
-from agents import (RandomGreenAgent, RandomRedAgent, RandomYellowAgent,
-                    RobotAgent, YellowAgent, GreenAgent)
+from agents import (
+    RandomGreenAgent,
+    RandomRedAgent,
+    RandomYellowAgent,
+    RobotAgent,
+    YellowAgent,
+    GreenAgent,
+    RedAgent,
+)
 from env import Environment, Radioactivity, Waste
 
 
@@ -24,7 +31,7 @@ class RobotMission(Model):
         else:
             self.greenagent = GreenAgent
             self.yellowagent = YellowAgent
-            self.redagent = RandomRedAgent
+            self.redagent = RedAgent
         green_agents = [
             self.greenagent(self, knowledge={}) for _ in range(n_agents["green"])
         ]
@@ -126,7 +133,9 @@ class RobotMission(Model):
             if isinstance(agent, RobotAgent):
                 knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
-                knowledge["grid"] = np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+                knowledge["grid"] = (
+                    np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+                )
                 agent.knowledge = knowledge
 
     def do(self, agent, action):

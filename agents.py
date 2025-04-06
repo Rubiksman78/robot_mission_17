@@ -60,7 +60,7 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
         i, j = self.get_pos()
-        mask = percepts["color_waste"] == self.color_to_gather
+        mask = np.isin(percepts["color_waste"], [self.color_to_gather, -1])
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ][mask] = percepts["color_waste"][mask]
@@ -442,9 +442,7 @@ class GreenAgent(RobotAgent):
                 self.green_deposit_position = [1, y]
                 self.begin = False
 
-        print("begin done")
         if self.must_deliver():
-            print("must deliver")
             if self.yellow_deposit_not_available:
                 if self.can_release() and not self.is_on_green_deposit():
                     return self.release()
@@ -461,18 +459,15 @@ class GreenAgent(RobotAgent):
         self.yellow_deposit_not_available = False
 
         if self.reachable_waste():
-            print("found waste")
             return self.reach_waste()
 
         if self.has_one_correct_waste():
-            print("going to green deposit")
             if self.is_on_green_deposit():
                 if self.can_release():
                     return self.release()
             else:
                 return self.go_to_green_deposit()
 
-        print("random walk")
         return self.random_walk()
 
 
@@ -780,7 +775,7 @@ class RedAgent(RobotAgent):
         )
 
     def is_on_waste_disposal(self):
-        self.knowledge["is_waste_disposal"][1, 1]
+        return self.knowledge["is_waste_disposal"][1, 1]
 
     def is_on_correct_waste(self):
         return self.knowledge["color_waste"][1, 1] == self.color_to_gather
@@ -827,7 +822,6 @@ class RedAgent(RobotAgent):
         targets = [
             [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
             for position in targets
-            if (position != self.yellow_deposit_position).any()
         ]
         return len(targets) > 0
 
@@ -837,7 +831,6 @@ class RedAgent(RobotAgent):
             [
                 [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
                 for position in targets
-                if (position != self.yellow_deposit_position).any()
             ]
         )
         if len(targets) == 0:
@@ -873,18 +866,22 @@ class RedAgent(RobotAgent):
 
     def deliberate(self):
         if self.must_deliver():
+            print("go to waste disposal")
             self.random_walk_counter = 0
             if self.is_on_waste_disposal():
+                print("reached")
                 return self.release()
 
             else:
                 return self.go_to_waste_disposal()
 
         if self.reachable_waste():
+            print("found waste")
             self.random_walk_counter = 0
             return self.reach_waste()
 
         if self.going_to_deposit:
+            print("go to red deposit")
             if self.is_on_red_deposit():
                 self.going_to_deposit = False
                 self.random_walk_counter = 0
@@ -892,4 +889,5 @@ class RedAgent(RobotAgent):
             else:
                 return self.go_to_red_deposit()
 
+        print("random walk")
         return self.random_walk()
