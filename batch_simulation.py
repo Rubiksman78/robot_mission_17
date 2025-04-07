@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent
+from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent, RedAgent
 from env import Waste
 from model import RobotMission
 
@@ -38,7 +38,7 @@ def visualize_simulation(model, steps, use_random_agents):
     else:
         greenagentclass = GreenAgent
         yellowagentclass = YellowAgent
-        # redagentclass = GreenAgent
+        redagentclass = RedAgent
     for step in range(steps):
         model.step()
         green_count, yellow_count, red_count = 0, 0, 0
@@ -68,7 +68,7 @@ def visualize_simulation(model, steps, use_random_agents):
 
 
 if __name__ == "__main__":
-    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=True, steps=200)
+    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=False, steps=200)
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
     waste_counts_red = mean_waste_counts["red"]

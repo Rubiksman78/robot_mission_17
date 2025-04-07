@@ -3,7 +3,14 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 
-from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent
+from agents import (
+    RandomGreenAgent,
+    RandomRedAgent,
+    RandomYellowAgent,
+    GreenAgent,
+    YellowAgent,
+    RedAgent,
+)
 from env import Waste
 from model import RobotMission
 
@@ -21,7 +28,7 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
     else:
         greenagentclass = GreenAgent
         yellowagentclass = YellowAgent
-        redagentclass = RandomRedAgent
+        redagentclass = RedAgent
 
     for step in range(steps):
         model.step()
@@ -61,13 +68,13 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
                     s=100,
                     alpha=0.5,
                 )
-            elif isinstance(
-                agent, (greenagentclass, yellowagentclass, redagentclass)
-            ):
+            elif isinstance(agent, (greenagentclass, yellowagentclass, redagentclass)):
                 color = (
                     "green"
                     if isinstance(agent, greenagentclass)
-                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
+                    else "yellow"
+                    if isinstance(agent, yellowagentclass)
+                    else "red"
                 )
                 ax.scatter(
                     agent.pos[0],
@@ -117,7 +124,9 @@ def start_gui():
             grid_size=grid_size_var.get(),
             use_random_agents=use_random_agents.get(),
         )
-        visualize_simulation(model, steps=steps_var.get(), use_random_agents=use_random_agents.get())
+        visualize_simulation(
+            model, steps=steps_var.get(), use_random_agents=use_random_agents.get()
+        )
 
     root = tk.Tk()
     root.title("Simulation Settings")
