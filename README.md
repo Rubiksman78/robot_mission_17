@@ -33,6 +33,8 @@ A window with the simulation and a plot of the number of wastes will be displaye
 
 Click on `Close simulation` in the UI to stop the script or run it again to make another simulation.
 
+**Note**: to have a total cleanup of the map, it is required to have $(\frac{n_{greenwaste}}{2}+n_{yellowwaste}) \% 2 = 0$ because robots can only combine 2 wastes of the same color. Obviously, the initial number of green wastes should also be divisible by 2.
+
 ## Batch simulation :chart_with_upwards_trend:
 
 To display an average of the wastes evolution for a large number of simulations, you can run
