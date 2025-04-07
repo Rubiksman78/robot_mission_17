@@ -1,26 +1,30 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import yaml
 
 from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent, RedAgent
 from env import Waste
 from model import RobotMission
 
 
-def run_batch_simu(num_simulations=10, random_agents=True, steps=1000):
+def run_batch_simu(num_simulations, random_agents, steps):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
+    with open("batch_config.yaml", "r") as f:
+        config = yaml.safe_load(f)
     for _ in range(num_simulations):
         model = RobotMission(
             n_agents={
-                "green": 3,
-                "yellow": 3,
-                "red": 3,
+                "green": config["green_robots"],
+                "yellow": config["yellow_robots"],
+                "red": config["red_robots"],
             },
             n_wastes={
-                "green": 10,
-                "yellow": 10,
-                "red": 10,
+                "green": config["green_wastes"],
+                "yellow": config["yellow_wastes"],
+                "red": config["red_wastes"],
             },
-            grid_size=20,
+            grid_size=config["grid_size"],
             use_random_agents=random_agents,
         )
         waste_counts = visualize_simulation(model, steps=steps, use_random_agents=random_agents)
@@ -42,8 +46,6 @@ def visualize_simulation(model, steps, use_random_agents):
     for step in range(steps):
         model.step()
         green_count, yellow_count, red_count = 0, 0, 0
-
-        # Draw waste and robot agents
         for agent in model.agents:
             if isinstance(agent, Waste) and agent.pos is not None:
                 color = ["green", "yellow", "red"][agent.color_waste]
@@ -68,7 +70,31 @@ def visualize_simulation(model, steps, use_random_agents):
 
 
 if __name__ == "__main__":
-    mean_waste_counts = run_batch_simu(num_simulations=20, random_agents=False, steps=200)
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--n_sim",
+        type=int,
+        default=10,
+        help="Number of simulations to run",
+    )
+    argparser.add_argument(
+        "--steps",
+        type=int,
+        default=1000,
+        help="Number of steps to run the simulation"
+    )
+    argparser.add_argument(
+        "--do_random",
+        action="store_true",
+        help="Use random agents",
+        default=False
+    )
+    args = argparser.parse_args()
+    mean_waste_counts = run_batch_simu(
+        num_simulations=args.n_sim,
+        random_agents=args.do_random,
+        steps=args.steps
+    )
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
     waste_counts_red = mean_waste_counts["red"]
@@ -96,7 +122,23 @@ if __name__ == "__main__":
         color="red",
     )
 
+    #Compute the AUC for each color
+    auc_green = np.trapz(mean_waste_counts_green, dx=1) / (args.steps*mean_waste_counts_green[0])
+    auc_yellow = np.trapz(mean_waste_counts_yellow, dx=1) / (args.steps*mean_waste_counts_yellow[0])
+    auc_red = np.trapz(mean_waste_counts_red, dx=1) / (args.steps*mean_waste_counts_red[0])
+    max_wastes = max(
+        mean_waste_counts_green[0],
+        mean_waste_counts_yellow[0],
+        mean_waste_counts_red[0],
+    )
     plt.xlabel("Step")
     plt.ylabel("Waste Count")
+    plt.text(
+        args.steps / 2,
+        max_wastes - 1,
+        f"Score green: {1-auc_green:.2f}\nScore yellow: {1-auc_yellow:.2f}\nScore red: {1-auc_red:.2f}",
+    )
     plt.legend()
     plt.show()
+
+    

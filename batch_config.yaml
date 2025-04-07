@@ -1,0 +1,7 @@
+green_robots : 3
+yellow_robots : 3
+red_robots : 3
+green_wastes : 12
+yellow_wastes : 8
+red_wastes : 8
+grid_size : 20

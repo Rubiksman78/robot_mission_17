@@ -37,13 +37,37 @@ Click on `Close simulation` in the UI to stop the script or run it again to make
 
 To display an average of the wastes evolution for a large number of simulations, you can run
 ```bash
-python batch_simulation.py
+python batch_simulation.py --n_sim=20 --steps=500 --do_random
 ```
-The UI and rendering of the grid will be disabled and a final plot will be displayed at the end of the simulations.
+Arguments:
+- `n_sim`: number of simulations to compute the average at each step
+- `do_random`: use random agents or not (if not, agents with the implemented heuristic will be used)
+- `steps`: number of steps for each simulation
+
+The UI and rendering of the grid will be disabled and a final plot will be displayed at the end of the simulations. AUC score is also displayed as (1-AUC) to have a metric to compare globally the behaviour of multiple agents.
+
+Other settings such as the number of robots, wastes and the grid size can be defined in `batch_config.yaml` which takes the following format:
+```yaml
+green_robots : 3
+yellow_robots : 3
+red_robots : 3
+green_wastes : 12
+yellow_wastes : 8
+red_wastes : 8
+grid_size : 20
+```
+
+Some results for the previously defined configuration are shown here:
+
+Heuristic agents:
 
 ![batch_image](images/batch_image.png)
 
-## Explications :memo:
+Random agents:
+
+![batch_image_random](images/batch_image_random.png)
+
+## Explanations :memo:
 
 ### Architecture chosen
 
