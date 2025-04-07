@@ -3,14 +3,8 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 
-from agents import (
-    RandomGreenAgent,
-    RandomRedAgent,
-    RandomYellowAgent,
-    GreenAgent,
-    YellowAgent,
-    RedAgent,
-)
+from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
+                    RandomYellowAgent, RedAgent, YellowAgent)
 from env import Waste
 from model import RobotMission
 
@@ -72,9 +66,7 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
                 color = (
                     "green"
                     if isinstance(agent, greenagentclass)
-                    else "yellow"
-                    if isinstance(agent, yellowagentclass)
-                    else "red"
+                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
                 )
                 ax.scatter(
                     agent.pos[0],

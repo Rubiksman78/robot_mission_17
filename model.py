@@ -2,15 +2,8 @@ import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
 
-from agents import (
-    RandomGreenAgent,
-    RandomRedAgent,
-    RandomYellowAgent,
-    RobotAgent,
-    YellowAgent,
-    GreenAgent,
-    RedAgent,
-)
+from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
+                    RandomYellowAgent, RedAgent, RobotAgent, YellowAgent)
 from env import Environment, Radioactivity, Waste
 
 

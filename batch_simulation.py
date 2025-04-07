@@ -1,16 +1,18 @@
+import argparse
+
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
 import yaml
 
-from agents import RandomGreenAgent, RandomRedAgent, RandomYellowAgent, GreenAgent, YellowAgent, RedAgent
+from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
+                    RandomYellowAgent, RedAgent, YellowAgent)
 from env import Waste
 from model import RobotMission
 
 
 def run_batch_simu(num_simulations, random_agents, steps):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
-    with open("batch_config.yaml", "r") as f:
+    with open("configs/batch_config.yaml", "r") as f:
         config = yaml.safe_load(f)
     for _ in range(num_simulations):
         model = RobotMission(
@@ -27,7 +29,9 @@ def run_batch_simu(num_simulations, random_agents, steps):
             grid_size=config["grid_size"],
             use_random_agents=random_agents,
         )
-        waste_counts = visualize_simulation(model, steps=steps, use_random_agents=random_agents)
+        waste_counts = visualize_simulation(
+            model, steps=steps, use_random_agents=random_agents
+        )
         for color in waste_counts:
             mean_waste_counts[color].append(waste_counts[color])
     return mean_waste_counts
@@ -55,9 +59,7 @@ def visualize_simulation(model, steps, use_random_agents):
                     yellow_count += 1
                 else:
                     red_count += 1
-            elif isinstance(
-                agent, (greenagentclass, yellowagentclass, redagentclass)
-            ):
+            elif isinstance(agent, (greenagentclass, yellowagentclass, redagentclass)):
                 color = (
                     "green"
                     if isinstance(agent, greenagentclass)
@@ -78,22 +80,14 @@ if __name__ == "__main__":
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps",
-        type=int,
-        default=1000,
-        help="Number of steps to run the simulation"
+        "--steps", type=int, default=1000, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
-        "--do_random",
-        action="store_true",
-        help="Use random agents",
-        default=False
+        "--do_random", action="store_true", help="Use random agents", default=False
     )
     args = argparser.parse_args()
     mean_waste_counts = run_batch_simu(
-        num_simulations=args.n_sim,
-        random_agents=args.do_random,
-        steps=args.steps
+        num_simulations=args.n_sim, random_agents=args.do_random, steps=args.steps
     )
     waste_counts_green = mean_waste_counts["green"]
     waste_counts_yellow = mean_waste_counts["yellow"]
@@ -122,10 +116,16 @@ if __name__ == "__main__":
         color="red",
     )
 
-    #Compute the AUC for each color
-    auc_green = np.trapz(mean_waste_counts_green, dx=1) / (args.steps*mean_waste_counts_green[0])
-    auc_yellow = np.trapz(mean_waste_counts_yellow, dx=1) / (args.steps*mean_waste_counts_yellow[0])
-    auc_red = np.trapz(mean_waste_counts_red, dx=1) / (args.steps*mean_waste_counts_red[0])
+    # Compute the AUC for each color
+    auc_green = np.trapz(mean_waste_counts_green, dx=1) / (
+        args.steps * mean_waste_counts_green[0]
+    )
+    auc_yellow = np.trapz(mean_waste_counts_yellow, dx=1) / (
+        args.steps * mean_waste_counts_yellow[0]
+    )
+    auc_red = np.trapz(mean_waste_counts_red, dx=1) / (
+        args.steps * mean_waste_counts_red[0]
+    )
     max_wastes = max(
         mean_waste_counts_green[0],
         mean_waste_counts_yellow[0],
@@ -140,5 +140,3 @@ if __name__ == "__main__":
     )
     plt.legend()
     plt.show()
-
-    

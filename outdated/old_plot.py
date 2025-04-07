@@ -1,3 +1,5 @@
+### OUTDATED DON'T USE ###
+
 from IPython import display
 
 from agents import GreenAgent, RedAgent, YellowAgent

@@ -48,7 +48,7 @@ Arguments:
 
 The UI and rendering of the grid will be disabled and a final plot will be displayed at the end of the simulations. AUC score is also displayed as (1-AUC) to have a metric to compare globally the behaviour of multiple agents.
 
-Other settings such as the number of robots, wastes and the grid size can be defined in `batch_config.yaml` which takes the following format:
+Other settings such as the number of robots, wastes and the grid size can be defined in `configs/batch_config.yaml` which takes the following format:
 ```yaml
 green_robots : 3
 yellow_robots : 3
@@ -73,21 +73,46 @@ Random agents:
 
 ### Architecture chosen
 
+Our work is divided in several scripts that each handle different parts of the modelisation:
+- `agents.py`: definition of `RobotAgent` with common behaviours and specific behaviours for Green, Yellow and Red robots
+- `batch_simulation.py`: main script for experiments on multiple simulations
+- `env.py`: environment agents like Waste or Radioactivity, also responsible for updating the model at each step and exchanging information with the robots
+- `model.py`: supplementary layer over the environment placing all the Agents and defining updates closer to mesa formulation for running the simulation
+- `run.py`: main script for running a simulation with a GUI
+
 Agents used:
 - RobotAgent: GreenAgent, YellowAgent, RedAgent
 - WasteAgent
 - RadioactivityAgent
 
-Environnement
- 
+**Environnement** - The environment contains 3 majors classes:
+- `Waste(Agent)`: the Waste agent with a single attribute `color_waste`
+- `Radioactivity(Agent)`: the Radioactivty agent with attributes `radioactivity_level`, `is_waste_disposal` and `is_wall` which defines "Cell agents" representing different features of the map like the level of radioactivity of each cell, the waste disposal zone or delimiting the perimeter of the area with walls.
+- `Environment`: the main environment class with the method `get_info` to return an observation to the robot agent with information about its neighbours (see next paragraph on observation). The method `step` calls `get_info` to get the observation for the current position of the agent and send it back to it, it also updates the environment if the robot moves or if it moves wastes that impacts directly the map.
+
+*Observation* - The observation returned to update the knowledge of a robot is a dictionnary containing:
+- `radioactivity`: an array 3*3 containing the radioactivity value of all neighbouring cells (itself included, same for next arrays)
+- `color_waste`: an array 3*3 containing the color of the wastes around the robot, if there is no waste a value of -1 is given to the cell
+- `is_waste_disposal`: an array 3*3 with value 1 if it is a cell of the waste disposal zone, else -1
+- `is_wall`: an array 3*3 with value 1 if the cell is a wall, else 0
+- `other_robots`: an array 3*3 with value 1 if another robot is present at this cell, else 0. The center cell itself is by design given a 1.
+- `success`: a boolean given the value 1 if there is no other robot in the neighbourhood (excluding the current robot iself)
+
 Model
 
-### Comportement des agents
+### Agents behaviour
 
 Random Behaviour
 
 Implemented heuristic
 
-### Analyse des résultats
+### Analysis of results
 
-Comparison of the two agent modes
+As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
+
+## Further work :art:
+
+We are currently working on more features to improve robots behaviour and optimize even better the collection of wastes:
+- Replace random walking by a better policy
+- Set up communication between robots to exchange information about wastes placement
+- Complexify the environments with varying radiation, robots battery and more
