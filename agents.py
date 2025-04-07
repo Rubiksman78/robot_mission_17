@@ -4,7 +4,7 @@ import numpy as np
 from mesa import Agent
 
 EMPTY = -1
-WALL = 0
+WALL = -1
 
 
 class RobotAgent(Agent):
@@ -273,7 +273,7 @@ class GreenAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_yellow_deposit(self):
         return (
@@ -286,7 +286,7 @@ class GreenAgent(RobotAgent):
         return (
             (self.wall_map()[0, :]).all()
             and (self.knowledge["radioactivity"][1:, 2] > self.green_threshold).all()
-            and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
+            and (self.knowledge["radioactivity"][1:, :2] <= self.green_threshold).all()
         )
 
     def is_on_correct_waste(self):
@@ -306,33 +306,54 @@ class GreenAgent(RobotAgent):
 
     def go_to_green_deposit(self):
         possible_actions = []
-        if not self.wall_map()[0, 1]:
+        if not self.wall_map()[0, 1] and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
 
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
+        if (
+            self.knowledge["radioactivity"][1, 2] <= self.green_threshold
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
             possible_actions.append("move_Right")
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        if len(possible_actions) > 0:
+            action = random.choice(possible_actions)
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def go_to_init_position(self):
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
+        if (
+            self.knowledge["radioactivity"][1, 2] <= self.green_threshold
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
             action = "move_Right"
 
-        else:
+        elif not self.knowledge["other_robots"][2, 1] == 1:
             action = "move_Down"
 
+        else:
+            return self.random_walk()
         return self.actions_dict[action]
 
     def go_to_yellow_deposit(self):
-        possible_actions = []
-        if not self.wall_map()[2, 1]:
-            possible_actions.append("move_Down")
+        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
+            action = "move_Down"
 
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
-            possible_actions.append("move_Right")
+        elif (
+            self.knowledge["radioactivity"][1, 2] <= self.green_threshold
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
+            action = "move_Right"
 
-        action = random.choice(possible_actions)
+        elif (
+            self.knowledge["radioactivity"][1, 0] > self.green_threshold
+            and not self.knowledge["other_robots"][1, 0] == 1
+        ):
+            action = "move_Left"
+
+        else:
+            return self.random_walk()
+
         return self.actions_dict[action]
 
     def can_release(self):
@@ -419,17 +440,20 @@ class GreenAgent(RobotAgent):
         possible_actions = []
         targetx, targety = self.find_nearest_waste()
         x, y = self.get_pos()
-        if targetx > x:
+        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
-        elif targetx < x:
+        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
             possible_actions.append("move_Down")
-        if targety > y:
+        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
             possible_actions.append("move_Right")
-        elif targety < y:
+        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
             possible_actions.append("move_Left")
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        if len(possible_actions) > 0:
+            action = random.choice(possible_actions)
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def deliberate(self):
         if self.begin:
@@ -465,6 +489,8 @@ class GreenAgent(RobotAgent):
             if self.is_on_green_deposit():
                 if self.can_release():
                     return self.release()
+                elif self.is_on_correct_waste():
+                    return self.pick()
             else:
                 return self.go_to_green_deposit()
 
@@ -512,7 +538,7 @@ class YellowAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_yellow_deposit(self):
         return (
@@ -552,41 +578,63 @@ class YellowAgent(RobotAgent):
 
     def go_to_init_position(self):
         if not self.wall_map()[0, 1]:
-            if self.knowledge["radioactivity"][1, 1] <= self.green_threshold:
+            if (
+                self.knowledge["radioactivity"][1, 1] <= self.green_threshold
+                and not self.knowledge["other_robots"][1, 2] == 1
+            ):
                 action = "move_Right"
-            elif self.knowledge["radioactivity"][1, 0] > self.green_threshold:
+            elif (
+                self.knowledge["radioactivity"][1, 0] > self.green_threshold
+                and not self.knowledge["other_robots"][1, 0] == 1
+            ):
                 action = "move_Left"
-            else:
+            elif not self.knowledge["other_robots"][0, 1] == 1:
                 action = "move_Up"
-        else:
+            else:
+                return self.random_walk()
+        elif not self.knowledge["other_robots"][1, 0] == 1:
             action = "move_Left"
+        else:
+            action = "nothing"
 
         return self.actions_dict[action]
 
     def go_to_yellow_deposit(self):
-        possible_actions = []
-        if not self.wall_map()[2, 1]:
-            possible_actions.append("move_Down")
+        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
+            action = "move_Down"
 
-        if self.knowledge["radioactivity"][1, 2] <= self.green_threshold:
-            possible_actions.append("move_Right")
+        elif (
+            self.knowledge["radioactivity"][1, 2] <= self.green_threshold
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
+            action = "move_Right"
 
-        elif self.knowledge["radioactivity"][1, 0] > self.green_threshold:
-            possible_actions.append("move_Left")
+        elif (
+            self.knowledge["radioactivity"][1, 1] > self.green_threshold
+            and not self.knowledge["other_robots"][1, 0] == 1
+        ):
+            action = "move_Left"
 
-        action = random.choice(possible_actions)
+        else:
+            return self.random_walk()
+
         return self.actions_dict[action]
 
     def go_to_red_deposit(self):
-        possible_actions = []
-        if not self.wall_map()[2, 1]:
-            possible_actions.append("move_Down")
+        action = ""
+        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
+            action = "move_Down"
 
-        if self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold:
-            possible_actions.append("move_Right")
+        elif (
+            self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
+            action = "move_Right"
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        if len(action) > 0:
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def can_release(self):
         return self.knowledge["color_waste"][1, 1] == EMPTY
@@ -667,18 +715,22 @@ class YellowAgent(RobotAgent):
 
         possible_actions = []
         targetx, targety = self.find_nearest_waste()
+
         x, y = self.get_pos()
-        if targetx > x:
+        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
-        elif targetx < x:
+        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
             possible_actions.append("move_Down")
-        if targety > y:
+        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
             possible_actions.append("move_Right")
-        elif targety < y:
+        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
             possible_actions.append("move_Left")
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        if len(possible_actions) > 0:
+            action = random.choice(possible_actions)
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def deliberate(self):
         if self.begin:
@@ -718,6 +770,8 @@ class YellowAgent(RobotAgent):
             if self.is_on_yellow_deposit():
                 if self.can_release():
                     return self.release()
+                elif self.is_on_correct_waste():
+                    return self.pick()
             else:
                 return self.go_to_yellow_deposit()
 
@@ -728,7 +782,9 @@ class RedAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
         self.color_to_gather = 2  # Can only gather red wastes
-        self.random_walk_counter = 0
+        self.random_walk_counter = (
+            0  # Every 15 random_walk steps, the agent goes to the red waste deposit
+        )
         self.going_to_deposit = False
 
     def random_walk(self):
@@ -765,7 +821,7 @@ class RedAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_red_deposit(self):
         return (
@@ -784,30 +840,46 @@ class RedAgent(RobotAgent):
         return len(self.knowledge["carried"]) > 0
 
     def go_to_waste_disposal(self):
-        if not self.wall_map()[1, 2]:
+        if not self.wall_map()[1, 2] and not self.knowledge["other_robots"][1, 2] == 1:
             action = "move_Right"
 
-        elif self.get_pos()[0] < len(self.knowledge["grid"]) // 2:
+        elif (
+            self.get_pos()[0] < len(self.knowledge["grid"]) // 2
+            and not self.knowledge["other_robots"][0, 1] == 1
+        ):
             action = "move_Up"
 
-        else:
+        elif not self.knowledge["other_robots"][2, 1] == 1:
             action = "move_Down"
+
+        else:
+            return self.random_walk()
 
         return self.actions_dict[action]
 
     def go_to_red_deposit(self):
-        possible_actions = []
-        if not self.wall_map()[2, 1]:
-            possible_actions.append("move_Down")
+        action = ""
 
-        if self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold:
-            possible_actions.append("move_Right")
+        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
+            action = "move_Down"
 
-        elif self.knowledge["radioactivity"][1, 1] > self.yellow_threshold:
-            possible_actions.append("move_Left")
+        elif (
+            self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold
+            and not self.wall_map()[1, 2]
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
+            action = "move_Right"
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        elif (
+            self.knowledge["radioactivity"][1, 1] > self.yellow_threshold
+            and not self.knowledge["other_robots"][1, 0] == 1
+        ):
+            action = "move_Left"
+
+        if len(action) > 0:
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def release(self):
         return self.actions_dict[
@@ -852,42 +924,38 @@ class RedAgent(RobotAgent):
         possible_actions = []
         targetx, targety = self.find_nearest_waste()
         x, y = self.get_pos()
-        if targetx > x:
+        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
-        elif targetx < x:
+        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
             possible_actions.append("move_Down")
-        if targety > y:
+        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
             possible_actions.append("move_Right")
-        elif targety < y:
+        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
             possible_actions.append("move_Left")
 
-        action = random.choice(possible_actions)
-        return self.actions_dict[action]
+        if len(possible_actions) > 0:
+            action = random.choice(possible_actions)
+            return self.actions_dict[action]
+        else:
+            return self.random_walk()
 
     def deliberate(self):
         if self.must_deliver():
-            print("go to waste disposal")
-            self.random_walk_counter = 0
             if self.is_on_waste_disposal():
-                print("reached")
                 return self.release()
 
             else:
                 return self.go_to_waste_disposal()
 
         if self.reachable_waste():
-            print("found waste")
             self.random_walk_counter = 0
             return self.reach_waste()
 
         if self.going_to_deposit:
-            print("go to red deposit")
             if self.is_on_red_deposit():
                 self.going_to_deposit = False
                 self.random_walk_counter = 0
 
             else:
                 return self.go_to_red_deposit()
-
-        print("random walk")
         return self.random_walk()

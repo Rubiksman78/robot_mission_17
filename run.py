@@ -132,8 +132,8 @@ def start_gui():
     root.title("Simulation Settings")
 
     tk.Label(root, text="Number of Steps").pack()
-    steps_var = tk.IntVar(value=100)
-    tk.Scale(root, from_=1, to=100, orient=tk.HORIZONTAL, variable=steps_var).pack()
+    steps_var = tk.IntVar(value=150)
+    tk.Scale(root, from_=1, to=150, orient=tk.HORIZONTAL, variable=steps_var).pack()
 
     tk.Label(root, text="Grid Size").pack()
     grid_size_var = tk.IntVar(value=10)
