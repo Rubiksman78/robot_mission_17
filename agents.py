@@ -4,7 +4,7 @@ import numpy as np
 from mesa import Agent
 
 EMPTY = -1
-WALL = 0
+WALL = -1
 
 
 class RobotAgent(Agent):
@@ -273,7 +273,7 @@ class GreenAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_yellow_deposit(self):
         return (
@@ -538,7 +538,7 @@ class YellowAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_yellow_deposit(self):
         return (
@@ -782,7 +782,9 @@ class RedAgent(RobotAgent):
     def __init__(self, model, knowledge):
         super().__init__(model, knowledge)
         self.color_to_gather = 2  # Can only gather red wastes
-        self.random_walk_counter = 0
+        self.random_walk_counter = (
+            0  # Every 15 random_walk steps, the agent goes to the red waste deposit
+        )
         self.going_to_deposit = False
 
     def random_walk(self):
@@ -819,7 +821,7 @@ class RedAgent(RobotAgent):
         return self.actions_dict[action]
 
     def wall_map(self):
-        return self.knowledge["radioactivity"] == -1
+        return self.knowledge["radioactivity"] == WALL
 
     def is_on_red_deposit(self):
         return (
@@ -939,7 +941,6 @@ class RedAgent(RobotAgent):
 
     def deliberate(self):
         if self.must_deliver():
-            self.random_walk_counter = 0
             if self.is_on_waste_disposal():
                 return self.release()
 
