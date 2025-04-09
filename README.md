@@ -146,6 +146,6 @@ As demonstrated in the previous section with the batch simulation, the implement
 ## Further work :art:
 
 We are currently working on more features to improve robots behaviour and optimize even better the collection of wastes:
-- Replace random walking by a better policy, including efficient exploration
+- Replace random walking by a better policy, including a more efficient exploration
 - Set up communication between robots to exchange information about wastes placement
 - Complexify the environments with varying radiation, robots battery and more
