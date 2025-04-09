@@ -104,7 +104,37 @@ Model
 
 Random Behaviour
 
+The random agent adopts a very simple behavior to establish a baselines for the performances:
+- If it is located on a right colored waste, it picks it
+- If it is located on the waste disposal, it releases a waste it owns
+- If None of the above apply, choose a random action between the following ones (without considering impossible actions):
+    - Release
+    - Go Up
+    - Go Right
+    - Go Down
+    - Go Left
+
 Implemented heuristic
+
+The chosen heuristic is based on the simple idea to have a common deposit slot for every robot. We define a green, yellow and red wastes deposit and they are the locations where our robots can make exchanges. Once they are defined, the robots policy is the following:
+
+Green agent:
+- if it carries a yellow waste, it goes to the yellow deposit and deliver the waste
+- if it knows the location of a green waste, it goes and collect the waste
+- if it carries a green waste, it makes its way towards the green deposit and release the waste if the deposit is empty
+- if None of the above apply, the robot makes a random walk
+
+Yellow agent:
+- if it carries a red waste, it goes to the red deposit and deliver the waste
+- if it knows the location of a yellow waste, it goes and collect the waste
+- if it carries a yellow waste, it makes its way towards the yellow deposit and release the waste if the deposit is empty
+- if None of the above apply, the robot makes a random walk
+
+Red agent:
+- if it carries a red waste, it goes to the waste disposal and deliver the waste
+- if it knows the location of a red waste, it goes and collect the waste
+- if None of the above apply, the robot makes a random walk
+- every 15 steps of consecutive random walk, the agent goes and verify the red deposit.
 
 ### Analysis of results
 
@@ -113,6 +143,6 @@ As demonstrated in the previous section with the batch simulation, the implement
 ## Further work :art:
 
 We are currently working on more features to improve robots behaviour and optimize even better the collection of wastes:
-- Replace random walking by a better policy
+- Replace random walking by a better policy, including efficient exploration
 - Set up communication between robots to exchange information about wastes placement
 - Complexify the environments with varying radiation, robots battery and more
