@@ -80,7 +80,7 @@ Our work is divided in several scripts that each handle different parts of the m
 - `model.py`: supplementary layer over the environment placing all the Agents and defining updates closer to mesa formulation for running the simulation
 - `run.py`: main script for running a simulation with a GUI
 
-Agents used:
+**Agents** used:
 - RobotAgent: GreenAgent, YellowAgent, RedAgent
 - WasteAgent
 - RadioactivityAgent
@@ -98,7 +98,10 @@ Agents used:
 - `other_robots`: an array 3*3 with value 1 if another robot is present at this cell, else 0. The center cell itself is by design given a 1.
 - `success`: a boolean given the value 1 if there is no other robot in the neighbourhood (excluding the current robot iself)
 
-Model
+**Model** - The model calls the environment, run the simulation and place all the agents:
+- `RobotAgent placing`: Robots are placed randomly on the grid if they can move in it. Green agents can only be placed in the left zone, yellow in the left and middle, red everywhere. It is also endured that two robots can't be placed at the same location.
+- `Radioactivity placing`: Radioactivity agents are placed on every cell with a different value according to the defined radioactivity zones (green, yellow and red). A rectangle of size 5*2 is also placed on the far right side to represent the waste disposal zone, radioactivity is the same as the red zone.
+- `Waste placing`: Wastes are placed randomly on the grid in their respective zones. Two wastes can't be placed at the same location too.
 
 ### Agents behaviour
 
