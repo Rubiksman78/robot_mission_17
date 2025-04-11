@@ -18,6 +18,8 @@ class RobotMission(Model):
         super().__init__(seed=seed)
         self.grid_size = grid_size
         self.n_wastes = n_wastes
+        self.__messages_service = MessageService(self)
+        self.running = True
         if use_random_agents:
             self.greenagent = RandomGreenAgent
             self.yellowagent = RandomYellowAgent
@@ -41,7 +43,6 @@ class RobotMission(Model):
         self.place_cell_agents()
         self.env = Environment(self, self.grid)
         self.initialize_agent()
-        self.__messages_service = MessageService(self)
 
     def place_robot_agents(self, agent):
         placed = False
@@ -132,6 +133,11 @@ class RobotMission(Model):
                 knowledge["grid"] = (
                     np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
                 )
+                knowledge["id"] = [
+                    agent.unique_id
+                    for agent in self.agents
+                    if isinstance(agent, RobotAgent)
+                ]
                 agent.knowledge = knowledge
 
     def do(self, agent, action):

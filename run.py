@@ -6,6 +6,7 @@ from matplotlib import colors as mcolors
 from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
                     RandomYellowAgent, RedAgent, YellowAgent)
 from env import Waste
+from message.MessageService import MessageService
 from model import RobotMission
 
 
@@ -116,6 +117,7 @@ def start_gui():
             grid_size=grid_size_var.get(),
             use_random_agents=use_random_agents.get(),
         )
+        MessageService.get_instance().set_instant_delivery(True)
         visualize_simulation(
             model, steps=steps_var.get(), use_random_agents=use_random_agents.get()
         )

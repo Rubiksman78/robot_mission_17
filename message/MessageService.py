@@ -35,9 +35,7 @@ class MessageService:
 
     def send_message(self, message):
         """Dispatch message if instant delivery active, otherwise add the message to proceed list."""
-        print(message)
         if self.__instant_delivery:
-
             self.dispatch_message(message)
         else:
             self.__messages_to_proceed.append(message)
@@ -45,7 +43,7 @@ class MessageService:
     def dispatch_message(self, message):
         """Dispatch the message to the right agent."""
 
-        self.find_agent_from_name(message.get_dest()).receive_message(message)
+        self.find_agent_from_id(message.get_dest()).receive_message(message)
 
     def dispatch_messages(self):
         """Proceed each message received by the message service."""
@@ -55,11 +53,9 @@ class MessageService:
 
         self.__messages_to_proceed.clear()
 
-    def find_agent_from_name(self, agent_name):
+    def find_agent_from_id(self, agent_id):
         """Return the agent according to the agent name given."""
 
         for agent in self.__model.agents:
-
-            if agent.get_name() == agent_name:
-
+            if agent.unique_id == agent_id:
                 return agent
