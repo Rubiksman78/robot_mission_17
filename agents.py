@@ -968,7 +968,7 @@ class RedAgent(RobotAgent):
 
         action = random.choice(possible_actions)
         self.random_walk_counter += 1
-        if self.random_walk_counter == 15:
+        if self.random_walk_counter == 2*self.grid_size:
             self.going_to_deposit = True
         return self.actions_dict[action]
 
