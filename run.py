@@ -127,10 +127,10 @@ def start_gui():
 
     tk.Label(root, text="Number of Steps").pack()
     steps_var = tk.IntVar(value=150)
-    tk.Scale(root, from_=1, to=150, orient=tk.HORIZONTAL, variable=steps_var).pack()
+    tk.Scale(root, from_=1, to=500, orient=tk.HORIZONTAL, variable=steps_var).pack()
 
     tk.Label(root, text="Grid Size").pack()
-    grid_size_var = tk.IntVar(value=10)
+    grid_size_var = tk.IntVar(value=20)
     tk.Scale(root, from_=5, to=30, orient=tk.HORIZONTAL, variable=grid_size_var).pack()
 
     green_var = tk.IntVar(value=3)
@@ -152,9 +152,9 @@ def start_gui():
     tk.Label(root, text="Red Robots").pack()
     tk.Scale(root, from_=0, to=20, orient=tk.HORIZONTAL, variable=red_var).pack()
 
-    green_waste_var = tk.IntVar(value=10)
-    yellow_waste_var = tk.IntVar(value=10)
-    red_waste_var = tk.IntVar(value=10)
+    green_waste_var = tk.IntVar(value=12)
+    yellow_waste_var = tk.IntVar(value=8)
+    red_waste_var = tk.IntVar(value=8)
 
     tk.Label(root, text="Green Waste").pack()
     tk.Scale(
