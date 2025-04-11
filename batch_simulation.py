@@ -2,11 +2,13 @@ import argparse
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tqdm
 import yaml
 
 from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
                     RandomYellowAgent, RedAgent, YellowAgent)
 from env import Waste
+from message.MessageService import MessageService
 from model import RobotMission
 
 
@@ -14,7 +16,7 @@ def run_batch_simu(num_simulations, random_agents, steps):
     mean_waste_counts = {"green": [], "yellow": [], "red": []}
     with open("configs/batch_config.yaml", "r") as f:
         config = yaml.safe_load(f)
-    for _ in range(num_simulations):
+    for _ in tqdm.tqdm(range(num_simulations)):
         model = RobotMission(
             n_agents={
                 "green": config["green_robots"],
@@ -29,6 +31,7 @@ def run_batch_simu(num_simulations, random_agents, steps):
             grid_size=config["grid_size"],
             use_random_agents=random_agents,
         )
+        MessageService.get_instance().set_instant_delivery(True)
         waste_counts = visualize_simulation(
             model, steps=steps, use_random_agents=random_agents
         )
@@ -76,11 +79,11 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--n_sim",
         type=int,
-        default=10,
+        default=20,
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps", type=int, default=1000, help="Number of steps to run the simulation"
+        "--steps", type=int, default=500, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
         "--do_random", action="store_true", help="Use random agents", default=False
