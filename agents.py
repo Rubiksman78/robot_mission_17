@@ -4,9 +4,9 @@ from mailbox.Mailbox import Mailbox
 import numpy as np
 from mesa import Agent
 
-from message.MessageService import MessageService
 from message.Message import Message
 from message.MessagePerformative import MessagePerformative
+from message.MessageService import MessageService
 
 EMPTY = -1
 WALL = -1
@@ -79,21 +79,42 @@ class RobotAgent(Agent):
         percepts = self.model.do(self, action)
         self.update(percepts, action)
 
-        #TO DO: Adapt to situation
+        # TO DO: Adapt to situation
         list_messages = self.get_new_messages()
         for message in list_messages:
             print(message)
             if message.get_performative() == MessagePerformative.QUERY_REF:
                 if message.get_content() == "value of v":
-                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.INFORM_REF, self.__v))
+                    self.send_message(
+                        Message(
+                            self.get_name(),
+                            message.get_exp(),
+                            MessagePerformative.INFORM_REF,
+                            self.__v,
+                        )
+                    )
                 if isinstance(message.get_content(), int):
                     self.__v = message.get_content()
-                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.INFORM_REF, self.__v))
+                    self.send_message(
+                        Message(
+                            self.get_name(),
+                            message.get_exp(),
+                            MessagePerformative.INFORM_REF,
+                            self.__v,
+                        )
+                    )
             if message.get_performative() == MessagePerformative.INFORM_REF:
                 if message.get_content != self.__v:
-                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.QUERY_REF, self.__v))
+                    self.send_message(
+                        Message(
+                            self.get_name(),
+                            message.get_exp(),
+                            MessagePerformative.QUERY_REF,
+                            self.__v,
+                        )
+                    )
 
-    #TO DO: review methods if they correspond to our casee
+    # TO DO: review methods if they correspond to our casee
     def receive_message(self, message):
         """Receive a message (called by the MessageService object) and store it in the mailbox."""
         self.__mailbox.receive_messages(message)
