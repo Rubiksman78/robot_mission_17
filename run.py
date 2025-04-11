@@ -136,7 +136,7 @@ def start_gui():
     green_var = tk.IntVar(value=3)
     yellow_var = tk.IntVar(value=3)
     red_var = tk.IntVar(value=3)
-    use_random_agents = tk.BooleanVar(value=True)
+    use_random_agents = tk.BooleanVar(value=False)
 
     tk.Label(root, text="Use Random Agents").pack()
     tk.Checkbutton(
