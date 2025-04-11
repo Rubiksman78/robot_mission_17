@@ -1,7 +1,12 @@
 import random
+from mailbox.Mailbox import Mailbox
 
 import numpy as np
 from mesa import Agent
+
+from message.MessageService import MessageService
+from message.Message import Message
+from message.MessagePerformative import MessagePerformative
 
 EMPTY = -1
 WALL = -1
@@ -29,6 +34,9 @@ class RobotAgent(Agent):
         self.green_threshold = 1 / 3
         self.yellow_threshold = 2 / 3
         self.red_threshold = 1
+
+        self.__mailbox = Mailbox()
+        self.__messages_service = MessageService.get_instance()
 
     def get_pos(self):
         i, j = self.pos
@@ -70,6 +78,45 @@ class RobotAgent(Agent):
         action = self.deliberate()
         percepts = self.model.do(self, action)
         self.update(percepts, action)
+
+        #TO DO: Adapt to situation
+        list_messages = self.get_new_messages()
+        for message in list_messages:
+            print(message)
+            if message.get_performative() == MessagePerformative.QUERY_REF:
+                if message.get_content() == "value of v":
+                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.INFORM_REF, self.__v))
+                if isinstance(message.get_content(), int):
+                    self.__v = message.get_content()
+                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.INFORM_REF, self.__v))
+            if message.get_performative() == MessagePerformative.INFORM_REF:
+                if message.get_content != self.__v:
+                    self.send_message(Message(self.get_name(), message.get_exp(), MessagePerformative.QUERY_REF, self.__v))
+
+    #TO DO: review methods if they correspond to our casee
+    def receive_message(self, message):
+        """Receive a message (called by the MessageService object) and store it in the mailbox."""
+        self.__mailbox.receive_messages(message)
+
+    def send_message(self, message):
+        """Send message through the MessageService object."""
+        self.__messages_service.send_message(message)
+
+    def get_new_messages(self):
+        """Return all the unread messages."""
+        return self.__mailbox.get_new_messages()
+
+    def get_messages(self):
+        """Return all the received messages."""
+        return self.__mailbox.get_messages()
+
+    def get_messages_from_performative(self, performative):
+        """Return a list of messages which have the same performative."""
+        return self.__mailbox.get_messages_from_performative(performative)
+
+    def get_messages_from_exp(self, exp):
+        """Return a list of messages which have the same sender."""
+        return self.__mailbox.get_messages_from_exp(exp)
 
 
 class RandomGreenAgent(RobotAgent):

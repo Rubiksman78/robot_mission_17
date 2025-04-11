@@ -5,6 +5,7 @@ from mesa.space import MultiGrid
 from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
                     RandomYellowAgent, RedAgent, RobotAgent, YellowAgent)
 from env import Environment, Radioactivity, Waste
+from message.MessageService import MessageService
 
 
 class RobotMission(Model):
@@ -40,6 +41,7 @@ class RobotMission(Model):
         self.place_cell_agents()
         self.env = Environment(self, self.grid)
         self.initialize_agent()
+        self.__messages_service = MessageService(self)
 
     def place_robot_agents(self, agent):
         placed = False
@@ -119,6 +121,7 @@ class RobotMission(Model):
             waste.pos = random_pos
 
     def step(self):
+        self.__messages_service.dispatch_messages()
         self.agents.shuffle_do("step")
 
     def initialize_agent(self):
