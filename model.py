@@ -5,6 +5,7 @@ from mesa.space import MultiGrid
 from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
                     RandomYellowAgent, RedAgent, RobotAgent, YellowAgent)
 from env import Environment, Radioactivity, Waste
+from message.MessageService import MessageService
 
 
 class RobotMission(Model):
@@ -17,6 +18,8 @@ class RobotMission(Model):
         super().__init__(seed=seed)
         self.grid_size = grid_size
         self.n_wastes = n_wastes
+        self.__messages_service = MessageService(self)
+        self.running = True
         if use_random_agents:
             self.greenagent = RandomGreenAgent
             self.yellowagent = RandomYellowAgent
@@ -119,6 +122,7 @@ class RobotMission(Model):
             waste.pos = random_pos
 
     def step(self):
+        self.__messages_service.dispatch_messages()
         self.agents.shuffle_do("step")
 
     def initialize_agent(self):
@@ -127,8 +131,13 @@ class RobotMission(Model):
                 knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
                 knowledge["grid"] = (
-                    np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+                    np.zeros((self.grid_size + 2, self.grid_size + 2)) - 2
                 )
+                knowledge["id"] = [
+                    agent.unique_id
+                    for agent in self.agents
+                    if isinstance(agent, RobotAgent)
+                ]
                 agent.knowledge = knowledge
 
     def do(self, agent, action):

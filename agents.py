@@ -1,7 +1,12 @@
 import random
+from mailbox.Mailbox import Mailbox
 
 import numpy as np
 from mesa import Agent
+
+from message.Message import Message
+from message.MessagePerformative import MessagePerformative
+from message.MessageService import MessageService
 
 EMPTY = -1
 WALL = -1
@@ -31,25 +36,11 @@ class RobotAgent(Agent):
         self.yellow_threshold = 2 / 3
         self.red_threshold = 1
 
-        self.green_deposit_position = [
-            1,
-            (len(self.knowledge["grid"]) - 2)
-            - 2 * (len(self.knowledge["grid"]) - 2) // 3,
-        ]
-
-        self.yellow_deposit_position = [
-            len(self.knowledge["grid"]) - 2,
-            (len(self.knowledge["grid"]) - 2)
-            - 2 * (len(self.knowledge["grid"]) - 2) // 3,
-        ]
-        self.red_deposit_position = [
-            len(self.knowledge["grid"]) - 2,
-            (len(self.knowledge["grid"]) - 2) - (len(self.knowledge["grid"]) - 2) // 3,
-        ]
+        self.__mailbox = Mailbox()
+        self.__messages_service = MessageService.get_instance()
 
     def get_pos(self):
         i, j = self.pos
-        # return j+1, self.grid_size - i + 1,
         return (
             j + 1,
             i + 1,
@@ -58,7 +49,7 @@ class RobotAgent(Agent):
     def deliberate(self):
         pass
 
-    def update(self, percepts, action):
+    def update(self, percepts, action, other_grids=None):
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -77,16 +68,72 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
         i, j = self.get_pos()
-        mask = np.isin(percepts["color_waste"], [self.color_to_gather, -1])
+        mask = np.isin(percepts["color_waste"], [0, 1, 2, -1])
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ][mask] = percepts["color_waste"][mask]
+        if other_grids is not None:
+            for grid in other_grids:
+                for i in range(self.grid_size):
+                    for j in range(self.grid_size):
+                        if grid[i][j] != -2 and self.knowledge["grid"][i][j] == -2:
+                            self.knowledge["grid"][i][j] = grid[i][j]
         self.knowledge.update(percepts)
 
     def step(self):
         action = self.deliberate()
         percepts = self.model.do(self, action)
-        self.update(percepts, action)
+        other_grids = self.read_messages()
+        self.update(percepts, action, other_grids)
+        self.broadcast_message()
+
+    def read_messages(self):
+        all_grids = []
+        list_messages = self.get_new_messages()
+        for message in list_messages:
+            content = message.get_content()
+            all_grids.append(content)
+        return all_grids
+
+    def broadcast_message(self):
+        # Broadcast to all agents
+        for agent_id in self.knowledge["id"]:
+            self.send_message(
+                Message(
+                    self.get_id(),
+                    agent_id,
+                    MessagePerformative.QUERY_REF,
+                    self.knowledge["grid"],
+                )
+            )
+
+    def get_id(self):
+        return self.unique_id
+
+    # TO DO: review methods if they correspond to our casee
+    def receive_message(self, message):
+        """Receive a message (called by the MessageService object) and store it in the mailbox."""
+        self.__mailbox.receive_messages(message)
+
+    def send_message(self, message):
+        """Send message through the MessageService object."""
+        self.__messages_service.send_message(message)
+
+    def get_new_messages(self):
+        """Return all the unread messages."""
+        return self.__mailbox.get_new_messages()
+
+    def get_messages(self):
+        """Return all the received messages."""
+        return self.__mailbox.get_messages()
+
+    def get_messages_from_performative(self, performative):
+        """Return a list of messages which have the same performative."""
+        return self.__mailbox.get_messages_from_performative(performative)
+
+    def get_messages_from_exp(self, exp):
+        """Return a list of messages which have the same sender."""
+        return self.__mailbox.get_messages_from_exp(exp)
 
 
 class RandomGreenAgent(RobotAgent):
@@ -505,6 +552,22 @@ class GreenAgent(RobotAgent):
 
     def deliberate(self):
         if self.begin:
+            self.green_deposit_position = [
+                1,
+                (len(self.knowledge["grid"]) - 2)
+                - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+            ]
+
+            self.yellow_deposit_position = [
+                len(self.knowledge["grid"]) - 2,
+                (len(self.knowledge["grid"]) - 2)
+                - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+            ]
+            self.red_deposit_position = [
+                len(self.knowledge["grid"]) - 2,
+                (len(self.knowledge["grid"]) - 2)
+                - (len(self.knowledge["grid"]) - 2) // 3,
+            ]
             if not self.has_one_correct_waste() and self.is_on_correct_waste():
                 return self.pick()
             if not self.is_on_yellow_deposit():
@@ -540,7 +603,7 @@ class GreenAgent(RobotAgent):
             else:
                 return self.go_to_green_deposit()
 
-        return self.random_walk()
+        return self.explore()
 
 
 class YellowAgent(RobotAgent):
@@ -809,6 +872,22 @@ class YellowAgent(RobotAgent):
 
     def deliberate(self):
         if self.begin:
+            self.green_deposit_position = [
+                1,
+                (len(self.knowledge["grid"]) - 2)
+                - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+            ]
+
+            self.yellow_deposit_position = [
+                len(self.knowledge["grid"]) - 2,
+                (len(self.knowledge["grid"]) - 2)
+                - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+            ]
+            self.red_deposit_position = [
+                len(self.knowledge["grid"]) - 2,
+                (len(self.knowledge["grid"]) - 2)
+                - (len(self.knowledge["grid"]) - 2) // 3,
+            ]
             if not self.has_one_correct_waste() and self.is_on_correct_waste():
                 return self.pick()
             if not self.is_on_green_deposit():
@@ -848,7 +927,7 @@ class YellowAgent(RobotAgent):
             else:
                 return self.go_to_yellow_deposit()
 
-        return self.random_walk()
+        return self.explore()
 
 
 class RedAgent(RobotAgent):
@@ -892,6 +971,33 @@ class RedAgent(RobotAgent):
         if self.random_walk_counter == 15:
             self.going_to_deposit = True
         return self.actions_dict[action]
+
+    def explore(self):
+        nearest_unexplored = self.find_nearest_unexplored()
+        if isinstance(nearest_unexplored, tuple):
+            return self.reach_location(*nearest_unexplored)
+        else:
+            return self.random_walk()
+
+    def find_nearest_unexplored(self):
+        targets = np.argwhere(self.knowledge["grid"] == UNEXPLORED)
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+            ]
+        )  # do not look for green waste in green deposit
+
+        if len(targets) == 0:
+            return None
+
+        x, y = self.get_pos()
+
+        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
+        sorted_indices = np.lexsort(
+            (targets[:, 1], -targets[:, 0], distances)
+        )  # en cas d'égalité des distances, le plus en haut à gauche gagne
+        return tuple(targets[sorted_indices[0]])
 
     def wall_map(self):
         return self.knowledge["radioactivity"] == WALL
@@ -990,12 +1096,8 @@ class RedAgent(RobotAgent):
 
         return tuple(targets[sorted_indices[0]])
 
-    def reach_waste(self):
-        if self.is_on_correct_waste():
-            return self.pick()
-
+    def reach_location(self, targetx, targety):
         possible_actions = []
-        targetx, targety = self.find_nearest_waste()
         x, y = self.get_pos()
         if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
@@ -1011,6 +1113,13 @@ class RedAgent(RobotAgent):
             return self.actions_dict[action]
         else:
             return self.random_walk()
+
+    def reach_waste(self):
+        if self.is_on_correct_waste():
+            return self.pick()
+
+        targetx, targety = self.find_nearest_waste()
+        return self.reach_location(targetx, targety)
 
     def deliberate(self):
         if self.must_deliver():
