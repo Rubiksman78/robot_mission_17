@@ -528,13 +528,29 @@ class GreenAgent(RobotAgent):
     def reach_location(self, targetx, targety):
         possible_actions = []
         x, y = self.get_pos()
-        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
+        if (
+            targetx > x
+            and not self.knowledge["other_robots"][0, 1] == 1
+            and not self.wall_map()[0, 1]
+        ):
             possible_actions.append("move_Up")
-        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
+        elif (
+            targetx < x
+            and not self.knowledge["other_robots"][2, 1] == 1
+            and not self.wall_map()[2, 1]
+        ):
             possible_actions.append("move_Down")
-        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
+        if (
+            targety > y
+            and not self.knowledge["other_robots"][1, 2] == 1
+            and not self.wall_map()[1, 2]
+        ):
             possible_actions.append("move_Right")
-        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
+        elif (
+            targety < y
+            and not self.knowledge["other_robots"][1, 0] == 1
+            and not self.wall_map()[1, 0]
+        ):
             possible_actions.append("move_Left")
 
         if len(possible_actions) > 0:
@@ -661,7 +677,6 @@ class YellowAgent(RobotAgent):
                 if (position[1] <= self.red_deposit_position[1]).any()
             ]
         )  # do not look for green waste in green deposit
-
         if len(targets) == 0:
             return None
 
@@ -848,13 +863,29 @@ class YellowAgent(RobotAgent):
     def reach_location(self, targetx, targety):
         possible_actions = []
         x, y = self.get_pos()
-        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
+        if (
+            targetx > x
+            and not self.knowledge["other_robots"][0, 1] == 1
+            and not self.wall_map()[0, 1]
+        ):
             possible_actions.append("move_Up")
-        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
+        elif (
+            targetx < x
+            and not self.knowledge["other_robots"][2, 1] == 1
+            and not self.wall_map()[2, 1]
+        ):
             possible_actions.append("move_Down")
-        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
+        if (
+            targety > y
+            and not self.knowledge["other_robots"][1, 2] == 1
+            and not self.wall_map()[1, 2]
+        ):
             possible_actions.append("move_Right")
-        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
+        elif (
+            targety < y
+            and not self.knowledge["other_robots"][1, 0] == 1
+            and not self.wall_map()[1, 0]
+        ):
             possible_actions.append("move_Left")
 
         if len(possible_actions) > 0:
@@ -968,7 +999,7 @@ class RedAgent(RobotAgent):
 
         action = random.choice(possible_actions)
         self.random_walk_counter += 1
-        if self.random_walk_counter == 2*self.grid_size:
+        if self.random_walk_counter == 2 * self.grid_size:
             self.going_to_deposit = True
         return self.actions_dict[action]
 
@@ -995,8 +1026,8 @@ class RedAgent(RobotAgent):
 
         distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
         sorted_indices = np.lexsort(
-            (targets[:, 1], -targets[:, 0], distances)
-        )  # en cas d'égalité des distances, le plus en haut à gauche gagne
+            (targets[:, 1], targets[:, 0], distances)
+        )  # en cas d'égalité des distances, le plus en haut à droite gagne
         return tuple(targets[sorted_indices[0]])
 
     def wall_map(self):
@@ -1099,13 +1130,29 @@ class RedAgent(RobotAgent):
     def reach_location(self, targetx, targety):
         possible_actions = []
         x, y = self.get_pos()
-        if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
+        if (
+            targetx > x
+            and not self.knowledge["other_robots"][0, 1] == 1
+            and not self.wall_map()[0, 1]
+        ):
             possible_actions.append("move_Up")
-        elif targetx < x and not self.knowledge["other_robots"][2, 1] == 1:
+        elif (
+            targetx < x
+            and not self.knowledge["other_robots"][2, 1] == 1
+            and not self.wall_map()[2, 1]
+        ):
             possible_actions.append("move_Down")
-        if targety > y and not self.knowledge["other_robots"][1, 2] == 1:
+        if (
+            targety > y
+            and not self.knowledge["other_robots"][1, 2] == 1
+            and not self.wall_map()[1, 2]
+        ):
             possible_actions.append("move_Right")
-        elif targety < y and not self.knowledge["other_robots"][1, 0] == 1:
+        elif (
+            targety < y
+            and not self.knowledge["other_robots"][1, 0] == 1
+            and not self.wall_map()[1, 0]
+        ):
             possible_actions.append("move_Left")
 
         if len(possible_actions) > 0:
@@ -1140,4 +1187,4 @@ class RedAgent(RobotAgent):
 
             else:
                 return self.go_to_red_deposit()
-        return self.random_walk()
+        return self.explore()
