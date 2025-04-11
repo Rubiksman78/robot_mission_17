@@ -131,7 +131,7 @@ class RobotMission(Model):
                 knowledge = self.env.get_info(agent.pos)
                 knowledge["carried"] = []
                 knowledge["grid"] = (
-                    np.zeros((self.grid_size + 2, self.grid_size + 2)) - 1
+                    np.zeros((self.grid_size + 2, self.grid_size + 2)) - 2
                 )
                 knowledge["id"] = [
                     agent.unique_id

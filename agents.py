@@ -40,7 +40,6 @@ class RobotAgent(Agent):
 
     def get_pos(self):
         i, j = self.pos
-        # return j+1, self.grid_size - i + 1,
         return (
             j + 1,
             i + 1,
@@ -68,7 +67,7 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
         i, j = self.get_pos()
-        mask = np.isin(percepts["color_waste"], [self.color_to_gather, -1])
+        mask = np.isin(percepts["color_waste"], [0, 1, 2, -1])
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ][mask] = percepts["color_waste"][mask]
