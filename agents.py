@@ -48,7 +48,7 @@ class RobotAgent(Agent):
     def deliberate(self):
         pass
 
-    def update(self, percepts, action):
+    def update(self, percepts, action, other_grids=None):
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -71,15 +71,20 @@ class RobotAgent(Agent):
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ][mask] = percepts["color_waste"][mask]
+        if other_grids is not None:
+            for grid in other_grids:
+                for i in range(self.grid_size):
+                    for j in range(self.grid_size):
+                        if grid[i][j] != -2 and self.knowledge["grid"][i][j] == -2:
+                            self.knowledge["grid"][i][j] = grid[i][j]
         self.knowledge.update(percepts)
 
     def step(self):
         action = self.deliberate()
         percepts = self.model.do(self, action)
         other_grids = self.read_messages()
-        #TO DO: UPDATE GRID OF KNOWLEDGE WITH THESE GRIDS
-        self.update(percepts, action)
-        self.send_message()
+        self.update(percepts, action, other_grids)
+        self.broadcast_message()
 
     def read_messages(self):
         all_grids = []
@@ -88,9 +93,9 @@ class RobotAgent(Agent):
             content = message.get_content()
             all_grids.append(content)
         return all_grids
-        
-    def send_message(self):
-        #Broadcast to all agents
+
+    def broadcast_message(self):
+        # Broadcast to all agents
         for agent_id in self.knowledge["id"]:
             self.send_message(
                 Message(
