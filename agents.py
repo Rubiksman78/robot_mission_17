@@ -5,6 +5,7 @@ from mesa import Agent
 
 EMPTY = -1
 WALL = -1
+UNEXPLORED = -2
 
 
 class RobotAgent(Agent):
@@ -29,6 +30,22 @@ class RobotAgent(Agent):
         self.green_threshold = 1 / 3
         self.yellow_threshold = 2 / 3
         self.red_threshold = 1
+
+        self.green_deposit_position = [
+            1,
+            (len(self.knowledge["grid"]) - 2)
+            - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+        ]
+
+        self.yellow_deposit_position = [
+            len(self.knowledge["grid"]) - 2,
+            (len(self.knowledge["grid"]) - 2)
+            - 2 * (len(self.knowledge["grid"]) - 2) // 3,
+        ]
+        self.red_deposit_position = [
+            len(self.knowledge["grid"]) - 2,
+            (len(self.knowledge["grid"]) - 2) - (len(self.knowledge["grid"]) - 2) // 3,
+        ]
 
     def get_pos(self):
         i, j = self.pos
@@ -272,6 +289,34 @@ class GreenAgent(RobotAgent):
 
         return self.actions_dict[action]
 
+    def explore(self):
+        nearest_unexplored = self.find_nearest_unexplored()
+        if isinstance(nearest_unexplored, tuple):
+            return self.reach_location(*nearest_unexplored)
+        else:
+            return self.random_walk()
+
+    def find_nearest_unexplored(self):
+        targets = np.argwhere(self.knowledge["grid"] == UNEXPLORED)
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+                if (position[1] <= self.green_deposit_position[1]).any()
+            ]
+        )  # do not look for green waste in green deposit
+
+        if len(targets) == 0:
+            return None
+
+        x, y = self.get_pos()
+
+        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
+        sorted_indices = np.lexsort(
+            (targets[:, 1], -targets[:, 0], distances)
+        )  # en cas d'égalité des distances, le plus en haut à gauche gagne
+        return tuple(targets[sorted_indices[0]])
+
     def wall_map(self):
         return self.knowledge["radioactivity"] == WALL
 
@@ -433,12 +478,8 @@ class GreenAgent(RobotAgent):
         )  # en cas d'égalité des distances, le plus en haut à droite gagne
         return tuple(targets[sorted_indices[0]])
 
-    def reach_waste(self):
-        if self.is_on_correct_waste():
-            return self.pick()
-
+    def reach_location(self, targetx, targety):
         possible_actions = []
-        targetx, targety = self.find_nearest_waste()
         x, y = self.get_pos()
         if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
@@ -455,6 +496,13 @@ class GreenAgent(RobotAgent):
         else:
             return self.random_walk()
 
+    def reach_waste(self):
+        if self.is_on_correct_waste():
+            return self.pick()
+
+        targetx, targety = self.find_nearest_waste()
+        return self.reach_location(targetx, targety)
+
     def deliberate(self):
         if self.begin:
             if not self.has_one_correct_waste() and self.is_on_correct_waste():
@@ -462,8 +510,6 @@ class GreenAgent(RobotAgent):
             if not self.is_on_yellow_deposit():
                 return self.go_to_init_position()
             else:
-                _, y = self.get_pos()
-                self.green_deposit_position = [1, y]
                 self.begin = False
 
         if self.must_deliver():
@@ -504,7 +550,6 @@ class YellowAgent(RobotAgent):
         self.begin = True
         self.red_deposit_not_available = False
         self.go_up = True
-        self.yellow_deposit_position = [-1, -1]
 
     def random_walk(self):
         possible_actions = []
@@ -536,6 +581,34 @@ class YellowAgent(RobotAgent):
         action = random.choice(possible_actions)
 
         return self.actions_dict[action]
+
+    def explore(self):
+        nearest_unexplored = self.find_nearest_unexplored()
+        if isinstance(nearest_unexplored, tuple):
+            return self.reach_location(*nearest_unexplored)
+        else:
+            return self.random_walk()
+
+    def find_nearest_unexplored(self):
+        targets = np.argwhere(self.knowledge["grid"] == UNEXPLORED)
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+                if (position[1] <= self.red_deposit_position[1]).any()
+            ]
+        )  # do not look for green waste in green deposit
+
+        if len(targets) == 0:
+            return None
+
+        x, y = self.get_pos()
+
+        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
+        sorted_indices = np.lexsort(
+            (targets[:, 1], -targets[:, 0], distances)
+        )  # en cas d'égalité des distances, le plus en haut à gauche gagne
+        return tuple(targets[sorted_indices[0]])
 
     def wall_map(self):
         return self.knowledge["radioactivity"] == WALL
@@ -709,13 +782,8 @@ class YellowAgent(RobotAgent):
 
         return tuple(targets[sorted_indices[0]])
 
-    def reach_waste(self):
-        if self.is_on_correct_waste():
-            return self.pick()
-
+    def reach_location(self, targetx, targety):
         possible_actions = []
-        targetx, targety = self.find_nearest_waste()
-
         x, y = self.get_pos()
         if targetx > x and not self.knowledge["other_robots"][0, 1] == 1:
             possible_actions.append("move_Up")
@@ -732,6 +800,13 @@ class YellowAgent(RobotAgent):
         else:
             return self.random_walk()
 
+    def reach_waste(self):
+        if self.is_on_correct_waste():
+            return self.pick()
+
+        targetx, targety = self.find_nearest_waste()
+        return self.reach_location(targetx, targety)
+
     def deliberate(self):
         if self.begin:
             if not self.has_one_correct_waste() and self.is_on_correct_waste():
@@ -739,8 +814,6 @@ class YellowAgent(RobotAgent):
             if not self.is_on_green_deposit():
                 return self.go_to_init_position()
             else:
-                _, y = self.get_pos()
-                self.yellow_deposit_position = [len(self.knowledge["grid"]) - 2, y]
                 self.begin = False
 
         if self.must_deliver():
