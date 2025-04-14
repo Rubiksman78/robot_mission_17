@@ -68,15 +68,15 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
         i, j = self.get_pos()
-        mask = np.isin(percepts["color_waste"], [0, 1, 2, -1])
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
-        ][mask] = percepts["color_waste"][mask]
+        ]= percepts["color_waste"]
+
         if other_grids is not None:
             for grid in other_grids:
                 for i in range(self.grid_size):
                     for j in range(self.grid_size):
-                        if grid[i][j] != -2 and self.knowledge["grid"][i][j] == -2:
+                        if grid[i][j] != -2:# and self.knowledge["grid"][i][j] == -2:
                             self.knowledge["grid"][i][j] = grid[i][j]
         self.knowledge.update(percepts)
 
