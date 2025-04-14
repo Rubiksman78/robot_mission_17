@@ -74,9 +74,9 @@ class RobotAgent(Agent):
 
         if other_grids is not None:
             for grid in other_grids:
-                for i in range(self.grid_size):
-                    for j in range(self.grid_size):
-                        if grid[i][j] != -2:# and self.knowledge["grid"][i][j] == -2:
+                for i in range(self.grid_size + 2):
+                    for j in range(self.grid_size + 2):
+                        if grid[i][j] != -2:
                             self.knowledge["grid"][i][j] = grid[i][j]
         self.knowledge.update(percepts)
 
