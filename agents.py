@@ -1,5 +1,6 @@
 import random
 from mailbox.Mailbox import Mailbox
+from scipy.spatial.distance import cdist
 
 import numpy as np
 from mesa import Agent
@@ -123,7 +124,6 @@ class RobotAgent(Agent):
     def get_id(self):
         return self.unique_id
 
-    # TO DO: review methods if they correspond to our casee
     def receive_message(self, message):
         """Receive a message (called by the MessageService object) and store it in the mailbox."""
         self.__mailbox.receive_messages(message)
@@ -483,12 +483,50 @@ class GreenAgent(RobotAgent):
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
-        targets = [
-            [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
-            for position in targets
-            if (position != self.green_deposit_position).any()
-        ]  # do not look for green waste in green deposit
-        return len(targets) > 0
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+                if (position != self.green_deposit_position).any()
+            ]
+        )  # do not look for green waste in green deposit
+
+        if len(targets) == 0:
+            return None
+
+        prio1 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if self.knowledge["carried_by_others"][self.color_to_gather][pos]
+            == [self.color_to_gather]
+        ]
+
+        prio2 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
+        x, y = self.get_pos()
+        if self.knowledge["carried"] == [self.color_to_gather]:
+            prio1.append((x, y))
+
+        elif len(self.knowledge["carried"]) == 0:
+            prio2.append((x, y))
+
+        attributions, targets = self.attribution(prio1, targets)
+        attributions, targets = self.attribution(prio2, targets, attributions)
+        return (x, y) in attributions
+
+    def attribution(self, positions, targets, attributions={}):
+        while len(positions) > 0 and len(targets) > 0:
+            mat = cdist(positions, targets)
+            i, j = np.argmin(mat)
+            attributions[positions[i]] = targets[j]
+            positions.pop(i)
+            targets.pop(j)
+
+        return attributions, targets
 
     def find_nearest_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
@@ -503,13 +541,32 @@ class GreenAgent(RobotAgent):
         if len(targets) == 0:
             return None
 
-        x, y = self.get_pos()
+        prio1 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if self.knowledge["carried_by_others"][self.color_to_gather][pos]
+            == [self.color_to_gather]
+        ]
 
-        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
-        sorted_indices = np.lexsort(
-            (targets[:, 1], targets[:, 0], distances)
-        )  # en cas d'égalité des distances, le plus en haut à droite gagne
-        return tuple(targets[sorted_indices[0]])
+        prio2 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
+        x, y = self.get_pos()
+        if self.knowledge["carried"] == [self.color_to_gather]:
+            prio1.append((x, y))
+
+        elif len(self.knowledge["carried"]) == 0:
+            prio2.append((x, y))
+
+        attributions, targets = self.attribution(prio1, targets)
+        attributions, targets = self.attribution(prio2, targets, attributions)
+        if (x, y) in attributions:
+            return tuple(attributions[(x, y)])
+        else:
+            return None
 
     def reach_location(self, targetx, targety):
         possible_actions = []
@@ -894,12 +951,7 @@ class YellowAgent(RobotAgent):
                 (len(self.knowledge["grid"]) - 2)
                 - (len(self.knowledge["grid"]) - 2) // 3,
             ]
-            if not self.has_one_correct_waste() and self.is_on_correct_waste():
-                return self.pick()
-            if not self.is_on_green_deposit():
-                return self.go_to_init_position()
-            else:
-                self.begin = False
+            self.begin = False
 
         if self.must_deliver():
             if self.red_deposit_not_available:
