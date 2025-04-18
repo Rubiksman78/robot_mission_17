@@ -79,11 +79,11 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--n_sim",
         type=int,
-        default=20,
+        default=50,
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps", type=int, default=400, help="Number of steps to run the simulation"
+        "--steps", type=int, default=500, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
         "--do_random", action="store_true", help="Use random agents", default=False
@@ -120,13 +120,13 @@ if __name__ == "__main__":
     )
 
     # Compute the AUC for each color
-    auc_green = np.trapz(mean_waste_counts_green, dx=1) / (
+    auc_green = np.trapezoid(mean_waste_counts_green, dx=1) / (
         args.steps * mean_waste_counts_green[0]
     )
-    auc_yellow = np.trapz(mean_waste_counts_yellow, dx=1) / (
+    auc_yellow = np.trapezoid(mean_waste_counts_yellow, dx=1) / (
         args.steps * mean_waste_counts_yellow[0]
     )
-    auc_red = np.trapz(mean_waste_counts_red, dx=1) / (
+    auc_red = np.trapezoid(mean_waste_counts_red, dx=1) / (
         args.steps * mean_waste_counts_red[0]
     )
     max_wastes = max(
