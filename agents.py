@@ -50,6 +50,20 @@ class RobotAgent(Agent):
         pass
 
     def update(self, percepts, action, other_grids=None):
+        if other_grids is not None:
+            # for grid in other_grids:
+            #     for i in range(self.grid_size + 2):
+            #         for j in range(self.grid_size + 2):
+            #             if grid[i][j] != -2:
+            #                 self.knowledge["grid"][i][j] = grid[i][j]
+            for subgrid, agent_pos in other_grids:
+                for i in range(3):
+                    for j in range(3):
+                        if subgrid[i][j] != -2:
+                            self.knowledge["grid"][agent_pos[0] - 1 + i][
+                                agent_pos[1] - 1 + j
+                            ] = subgrid[i][j]
+
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -68,16 +82,9 @@ class RobotAgent(Agent):
             self.knowledge["carried"] = []
 
         i, j = self.get_pos()
-        mask = np.isin(percepts["color_waste"], [0, 1, 2, -1])
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
-        ][mask] = percepts["color_waste"][mask]
-        if other_grids is not None:
-            for grid in other_grids:
-                for i in range(self.grid_size):
-                    for j in range(self.grid_size):
-                        if grid[i][j] != -2 and self.knowledge["grid"][i][j] == -2:
-                            self.knowledge["grid"][i][j] = grid[i][j]
+        ]= percepts["color_waste"]
         self.knowledge.update(percepts)
 
     def step(self):
@@ -98,12 +105,16 @@ class RobotAgent(Agent):
     def broadcast_message(self):
         # Broadcast to all agents
         for agent_id in self.knowledge["id"]:
+            agent_pos = self.get_pos()
+            sub_grid = self.knowledge["grid"][
+                agent_pos[0] - 1 : agent_pos[0] + 2, agent_pos[1] - 1 : agent_pos[1] + 2
+            ]
             self.send_message(
                 Message(
                     self.get_id(),
                     agent_id,
                     MessagePerformative.QUERY_REF,
-                    self.knowledge["grid"],
+                    (sub_grid, agent_pos),
                 )
             )
 

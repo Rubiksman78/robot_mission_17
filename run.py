@@ -98,7 +98,7 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
         ax.set_yticks(range(model.grid_size))
         ax.set_title(f"Step: {step}")
 
-        plt.pause(0.01)
+        plt.pause(0.0001)
 
 
 def start_gui():

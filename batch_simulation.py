@@ -83,7 +83,7 @@ if __name__ == "__main__":
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps", type=int, default=500, help="Number of steps to run the simulation"
+        "--steps", type=int, default=400, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
         "--do_random", action="store_true", help="Use random agents", default=False
