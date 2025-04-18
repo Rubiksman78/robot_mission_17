@@ -68,14 +68,6 @@ def visualize_simulation(model, steps, use_random_agents):
                     yellow_count += 1
                 else:
                     red_count += 1
-            elif isinstance(agent, (greenagentclass, yellowagentclass, redagentclass)):
-                color = (
-                    "green"
-                    if isinstance(agent, greenagentclass)
-                    else "yellow"
-                    if isinstance(agent, yellowagentclass)
-                    else "red"
-                )
         waste_counts["green"].append(green_count)
         waste_counts["yellow"].append(yellow_count)
         waste_counts["red"].append(red_count)

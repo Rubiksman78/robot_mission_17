@@ -233,5 +233,4 @@ As demonstrated in the previous section with the batch simulation, the implement
 
 # TODO update Analysis of results
 maybe compare results when changing the number of agents/ grid size/ waste?
-rerun the graph to have the first step metrics
-compute AUC across all wastes? maybe it would make more sense overall
+rerun the graphs with old heuristics to have the first step metrics
