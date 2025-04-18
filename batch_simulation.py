@@ -79,11 +79,11 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--n_sim",
         type=int,
-        default=50,
+        default=10,
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps", type=int, default=500, help="Number of steps to run the simulation"
+        "--steps", type=int, default=300, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
         "--do_random", action="store_true", help="Use random agents", default=False
@@ -120,15 +120,26 @@ if __name__ == "__main__":
     )
 
     # Compute the AUC for each color
-    auc_green = np.trapezoid(mean_waste_counts_green, dx=1) / (
-        args.steps * mean_waste_counts_green[0]
-    )
-    auc_yellow = np.trapezoid(mean_waste_counts_yellow, dx=1) / (
-        args.steps * mean_waste_counts_yellow[0]
-    )
-    auc_red = np.trapezoid(mean_waste_counts_red, dx=1) / (
-        args.steps * mean_waste_counts_red[0]
-    )
+    if np.__version__ >= "2.0.0":
+        auc_green = np.trapezoid(mean_waste_counts_green, dx=1) / (
+            args.steps * mean_waste_counts_green[0]
+        )
+        auc_yellow = np.trapezoid(mean_waste_counts_yellow, dx=1) / (
+            args.steps * mean_waste_counts_yellow[0]
+        )
+        auc_red = np.trapezoid(mean_waste_counts_red, dx=1) / (
+            args.steps * mean_waste_counts_red[0]
+        )
+    else:
+        auc_green = np.trapz(mean_waste_counts_green, dx=1) / (
+            args.steps * mean_waste_counts_green[0]
+        )
+        auc_yellow = np.trapz(mean_waste_counts_yellow, dx=1) / (
+            args.steps * mean_waste_counts_yellow[0]
+        )
+        auc_red = np.trapz(mean_waste_counts_red, dx=1) / (
+            args.steps * mean_waste_counts_red[0]
+        )
     max_wastes = max(
         mean_waste_counts_green[0],
         mean_waste_counts_yellow[0],
@@ -140,6 +151,17 @@ if __name__ == "__main__":
         args.steps / 2,
         max_wastes - 1,
         f"Score green: {1-auc_green:.2f}\nScore yellow: {1-auc_yellow:.2f}\nScore red: {1-auc_red:.2f}",
+    )
+
+    #metric -> first step when the mean is 0
+    first_step_green = np.where(mean_waste_counts_green == 0)[0][0]
+    first_step_yellow = np.where(mean_waste_counts_yellow == 0)[0][0]
+    first_step_red = np.where(mean_waste_counts_red == 0)[0][0]
+
+    plt.text(
+        args.steps / 2,
+        max_wastes - 4,
+        f"First step green: {first_step_green}\nFirst step yellow: {first_step_yellow}\nFirst step red: {first_step_red}",
     )
     plt.legend()
     plt.show()
