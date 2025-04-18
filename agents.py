@@ -381,11 +381,7 @@ class GreenAgent(RobotAgent):
         return self.knowledge["radioactivity"] == WALL
 
     def is_on_yellow_deposit(self):
-        return (
-            (self.wall_map()[2, :]).all()
-            and (self.knowledge["radioactivity"][:2, 2] > self.green_threshold).all()
-            and (self.knowledge["radioactivity"][:, :2] <= self.green_threshold).all()
-        )
+        return self.get_pos() == self.find_nearest_yellow_deposit()
 
     def is_on_green_deposit(self):
         return (
@@ -440,26 +436,33 @@ class GreenAgent(RobotAgent):
             return self.random_walk()
         return self.actions_dict[action]
 
+    def find_nearest_yellow_deposit(self):
+        targets = np.argwhere(self.knowledge["grid"] == EMPTY)
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+                if (
+                    (position[1] <= self.yellow_deposit_position[1]).any()
+                    and position[0] not in [0, len(self.knowledge["grid"]) - 1]
+                    and (position != self.green_deposit_position).any()
+                )
+            ]
+        )  # do not look for green waste in green deposit
+        if len(targets) == 0:
+            return None
+
+        x, y = self.get_pos()
+
+        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
+        sorted_indices = np.lexsort(
+            (distances, -targets[:, 1])
+        )  # en cas d'égalité des positions en x, le plus proche gagne
+        return tuple(targets[sorted_indices[0]])
+
     def go_to_yellow_deposit(self):
-        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
-            action = "move_Down"
-
-        elif (
-            self.knowledge["radioactivity"][1, 2] <= self.green_threshold
-            and not self.knowledge["other_robots"][1, 2] == 1
-        ):
-            action = "move_Right"
-
-        elif (
-            self.knowledge["radioactivity"][1, 0] > self.green_threshold
-            and not self.knowledge["other_robots"][1, 0] == 1
-        ):
-            action = "move_Left"
-
-        else:
-            return self.random_walk()
-
-        return self.actions_dict[action]
+        targetx, targety = self.find_nearest_yellow_deposit()
+        return self.reach_location(targetx, targety)
 
     def can_release(self):
         return self.knowledge["color_waste"][1, 1] == EMPTY
@@ -475,38 +478,8 @@ class GreenAgent(RobotAgent):
     def act_in_yellow_deposit(self):
         if self.can_release():
             return self.release()
-
         else:
-            self.yellow_deposit_not_available = True
             return self.deliberate()
-
-    def find_place_to_deliver(self):
-        if self.go_up:
-            if self.wall_map()[0, 1]:
-                if not self.wall_map()[1, 0]:
-                    self.go_up = False
-                    return self.actions_dict["move_Left"]
-                else:
-                    self.go_up = True
-                    self.yellow_deposit_not_available = False
-                    return (
-                        self.deliberate()
-                    )  # go back to yellow deposit and start again
-            else:
-                return self.actions_dict["move_Up"]
-        else:
-            if self.wall_map()[2, 1]:
-                if not self.wall_map()[1, 0]:
-                    self.go_up = True
-                    return self.actions_dict["move_Left"]
-                else:
-                    self.go_up = True
-                    self.yellow_deposit_not_available = False
-                    return (
-                        self.deliberate()
-                    )  # go back to yellow deposit and start again
-            else:
-                return self.actions_dict["move_Down"]
 
     def reachable_waste(self):
         targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
@@ -597,28 +570,14 @@ class GreenAgent(RobotAgent):
                 (len(self.knowledge["grid"]) - 2)
                 - (len(self.knowledge["grid"]) - 2) // 3,
             ]
-            if not self.has_one_correct_waste() and self.is_on_correct_waste():
-                return self.pick()
-            if not self.is_on_yellow_deposit():
-                return self.go_to_init_position()
-            else:
-                self.begin = False
+            self.begin = False
 
         if self.must_deliver():
-            if self.yellow_deposit_not_available:
-                if self.can_release() and not self.is_on_green_deposit():
-                    return self.release()
-
-                else:
-                    return self.find_place_to_deliver()
-
-            elif self.is_on_yellow_deposit():
+            if self.is_on_yellow_deposit():
                 return self.act_in_yellow_deposit()
 
             else:
                 return self.go_to_yellow_deposit()
-
-        self.yellow_deposit_not_available = False
 
         if self.reachable_waste():
             return self.reach_waste()
@@ -712,11 +671,7 @@ class YellowAgent(RobotAgent):
         )
 
     def is_on_red_deposit(self):
-        return (
-            (self.wall_map()[2, :]).all()
-            and (self.knowledge["radioactivity"][:2, 2] > self.yellow_threshold).all()
-            and (self.knowledge["radioactivity"][:, :2] <= self.yellow_threshold).all()
-        )
+        return self.find_nearest_deposit() == self.get_pos()
 
     def is_on_green_deposit(self):
         return (
@@ -784,21 +739,32 @@ class YellowAgent(RobotAgent):
 
         return self.actions_dict[action]
 
+    def find_nearest_deposit(self):
+        targets = np.argwhere(self.knowledge["grid"] == EMPTY)
+        targets = np.array(
+            [
+                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+                for position in targets
+                if (
+                    (position[1] <= self.red_deposit_position[1]).any()
+                    and position[0] not in [0, len(self.knowledge["grid"]) - 1]
+                )
+            ]
+        )  # do not look for green waste in green deposit
+        if len(targets) == 0:
+            return None
+
+        x, y = self.get_pos()
+
+        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
+        sorted_indices = np.lexsort(
+            (distances, -targets[:, 1])
+        )  # en cas d'égalité des positions en x, le plus proche gagne
+        return tuple(targets[sorted_indices[0]])
+
     def go_to_red_deposit(self):
-        action = ""
-        if not self.wall_map()[2, 1] and not self.knowledge["other_robots"][2, 1] == 1:
-            action = "move_Down"
-
-        elif (
-            self.knowledge["radioactivity"][1, 2] <= self.yellow_threshold
-            and not self.knowledge["other_robots"][1, 2] == 1
-        ):
-            action = "move_Right"
-
-        if len(action) > 0:
-            return self.actions_dict[action]
-        else:
-            return self.random_walk()
+        targetx, targety = self.find_nearest_deposit()
+        return self.reach_location(targetx, targety)
 
     def can_release(self):
         return self.knowledge["color_waste"][1, 1] == EMPTY
@@ -814,10 +780,6 @@ class YellowAgent(RobotAgent):
     def act_in_red_deposit(self):
         if self.can_release():
             return self.release()
-
-        else:
-            self.red_deposit_not_available = True
-            return self.deliberate()
 
     def find_place_to_deliver(self):
         if self.go_up:
@@ -1039,7 +1001,7 @@ class RedAgent(RobotAgent):
 
         distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
         sorted_indices = np.lexsort(
-            (targets[:, 1], targets[:, 0], distances)
+            (-targets[:, 1], -targets[:, 0], distances)
         )  # en cas d'égalité des distances, le plus en haut à droite gagne
         return tuple(targets[sorted_indices[0]])
 
@@ -1140,7 +1102,7 @@ class RedAgent(RobotAgent):
 
         distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
         sorted_indices = np.lexsort(
-            (targets[:, 1], targets[:, 0], distances)
+            (-targets[:, 1], -targets[:, 0], distances)
         )  # en cas d'égalité des distances, le plus en haut à droite gagne
 
         return tuple(targets[sorted_indices[0]])
