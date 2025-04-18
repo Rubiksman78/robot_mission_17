@@ -60,8 +60,8 @@ class RobotAgent(Agent):
                             self.knowledge["grid"][self.grid_size - i + k][
                                 j - 1 + l
                             ] = subgrid[k][l]
-            
-                self.knowledge["carried_by_others"][color][(i,j)] = carried
+
+                self.knowledge["carried_by_others"][color][(i, j)] = carried
 
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
@@ -105,7 +105,7 @@ class RobotAgent(Agent):
     def broadcast_message(self):
         # Broadcast to all agents
         for agent_id in self.knowledge["id"]:
-            if agent_id!= self.get_id():
+            if agent_id != self.get_id():
                 i, j = self.get_pos()
                 sub_grid = self.knowledge["grid"][
                     self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
@@ -116,7 +116,12 @@ class RobotAgent(Agent):
                         self.get_id(),
                         agent_id,
                         MessagePerformative.QUERY_REF,
-                        (sub_grid, (i, j), self.knowledge["carried"], self.color_to_gather),
+                        (
+                            sub_grid,
+                            (i, j),
+                            self.knowledge["carried"],
+                            self.color_to_gather,
+                        ),
                     )
                 )
 
@@ -518,12 +523,15 @@ class GreenAgent(RobotAgent):
         return (x, y) in attributions
 
     def attribution(self, positions, targets, attributions={}):
+        positions = np.array(positions)
+        targets = np.array(targets)
         while len(positions) > 0 and len(targets) > 0:
             mat = cdist(positions, targets)
-            i, j = np.argmin(mat)
-            attributions[positions[i]] = targets[j]
-            positions.pop(i)
-            targets.pop(j)
+            min_id = np.argmin(mat)
+            i, j = np.unravel_index(min_id, mat.shape)
+            attributions[tuple(positions[i])] = tuple(targets[j])
+            positions = np.array(np.delete(positions, i, axis=0))
+            targets = np.array(np.delete(targets, j, axis=0))
 
         return attributions, targets
 
@@ -868,28 +876,84 @@ class YellowAgent(RobotAgent):
             for position in targets
             if (position != self.yellow_deposit_position).any()
         ]
-        return len(targets) > 0
 
-    def find_nearest_waste(self):
-        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
-        targets = np.array(
-            [
-                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
-                for position in targets
-                if (position != self.yellow_deposit_position).any()
-            ]
-        )
         if len(targets) == 0:
             return None
 
+        prio1 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if self.knowledge["carried_by_others"][self.color_to_gather][pos]
+            == [self.color_to_gather]
+        ]
+
+        prio2 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
         x, y = self.get_pos()
+        if self.knowledge["carried"] == [self.color_to_gather]:
+            prio1.append((x, y))
 
-        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
-        sorted_indices = np.lexsort(
-            (targets[:, 1], targets[:, 0], distances)
-        )  # en cas d'égalité des distances, le plus en haut à droite gagne
+        elif len(self.knowledge["carried"]) == 0:
+            prio2.append((x, y))
 
-        return tuple(targets[sorted_indices[0]])
+        attributions, targets = self.attribution(prio1, targets)
+        attributions, targets = self.attribution(prio2, targets, attributions)
+        return (x, y) in attributions
+
+    def attribution(self, positions, targets, attributions={}):
+        positions = np.array(positions)
+        targets = np.array(targets)
+        while len(positions) > 0 and len(targets) > 0:
+            mat = cdist(positions, targets)
+            min_id = np.argmin(mat)
+            i, j = np.unravel_index(min_id, mat.shape)
+            attributions[tuple(positions[i])] = tuple(targets[j])
+            positions = np.array(np.delete(positions, i, axis=0))
+            targets = np.array(np.delete(targets, j, axis=0))
+
+        return attributions, targets
+
+    def find_nearest_waste(self):
+        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
+        targets = [
+            [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+            for position in targets
+            if (position != self.yellow_deposit_position).any()
+        ]
+
+        if len(targets) == 0:
+            return None
+
+        prio1 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if self.knowledge["carried_by_others"][self.color_to_gather][pos]
+            == [self.color_to_gather]
+        ]
+
+        prio2 = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
+        x, y = self.get_pos()
+        if self.knowledge["carried"] == [self.color_to_gather]:
+            prio1.append((x, y))
+
+        elif len(self.knowledge["carried"]) == 0:
+            prio2.append((x, y))
+
+        attributions, targets = self.attribution(prio1, targets)
+        attributions, targets = self.attribution(prio2, targets, attributions)
+        if (x, y) in attributions:
+            return tuple(attributions[(x, y)])
+        else:
+            return None
 
     def reach_location(self, targetx, targety):
         possible_actions = []
@@ -1136,27 +1200,63 @@ class RedAgent(RobotAgent):
             [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
             for position in targets
         ]
-        return len(targets) > 0
 
-    def find_nearest_waste(self):
-        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
-        targets = np.array(
-            [
-                [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
-                for position in targets
-            ]
-        )
         if len(targets) == 0:
             return None
 
+        prio = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
         x, y = self.get_pos()
 
-        distances = np.abs(targets[:, 0] - x) + np.abs(targets[:, 1] - y)
-        sorted_indices = np.lexsort(
-            (-targets[:, 1], -targets[:, 0], distances)
-        )  # en cas d'égalité des distances, le plus en haut à droite gagne
+        if len(self.knowledge["carried"]) == 0:
+            prio.append((x, y))
 
-        return tuple(targets[sorted_indices[0]])
+        attributions, targets = self.attribution(prio, targets)
+        return (x, y) in attributions
+
+    def attribution(self, positions, targets, attributions={}):
+        positions = np.array(positions)
+        targets = np.array(targets)
+        while len(positions) > 0 and len(targets) > 0:
+            mat = cdist(positions, targets)
+            min_id = np.argmin(mat)
+            i, j = np.unravel_index(min_id, mat.shape)
+            attributions[tuple(positions[i])] = tuple(targets[j])
+            positions = np.array(np.delete(positions, i, axis=0))
+            targets = np.array(np.delete(targets, j, axis=0))
+
+        return attributions, targets
+
+    def find_nearest_waste(self):
+        targets = np.argwhere(self.knowledge["grid"] == self.color_to_gather)
+        targets = [
+            [len(self.knowledge["grid"]) - position[0] - 1, position[1]]
+            for position in targets
+        ]
+
+        if len(targets) == 0:
+            return None
+
+        prio = [
+            pos
+            for pos in self.knowledge["carried_by_others"][self.color_to_gather]
+            if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
+        ]
+
+        x, y = self.get_pos()
+
+        if len(self.knowledge["carried"]) == 0:
+            prio.append((x, y))
+
+        attributions, targets = self.attribution(prio, targets)
+        if (x, y) in attributions:
+            return tuple(attributions[(x, y)])
+        else:
+            return None
 
     def reach_location(self, targetx, targety):
         possible_actions = []
