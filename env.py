@@ -102,7 +102,6 @@ class Environment:
         for i, neighbour in enumerate(neighbours):
             neighbour_agent = self.grid.get_cell_list_contents(neighbour)
             if len(neighbour_agent) == 0:
-                print(neighbour)
                 raise ValueError
             waste_agent, radioactivity_agent, robot_agent = None, None, None
             for agent in neighbour_agent:
