@@ -33,7 +33,7 @@ A window with the simulation and a plot of the number of wastes will be displaye
 
 Click on `Close simulation` in the UI to stop the script or run it again to make another simulation.
 
-**Note**: to have a total cleanup of the map, it is required to have $(\frac{n_{greenwaste}}{2}+n_{yellowwaste}) \% 2 = 0$ because robots can only combine 2 wastes of the same color. Obviously, the initial number of green wastes should also be divisible by 2.
+**Note**: to have a total cleanup of the map, it is required to have $(\frac{n_{greenwaste}}{2}+n_{yellowwaste}) \\% 2 = 0$ because robots can only combine 2 wastes of the same color. Obviously, the initial number of green wastes should also be divisible by 2.
 
 ## Batch simulation :chart_with_upwards_trend:
 
@@ -143,6 +143,12 @@ The chosen heuristic is based on the simple idea to have a common deposit slot f
 
 Instead of doing a random walk, we also implemented an exploration of unseen cells when the robot doesn't have a target in mind from its knowledge. This is simply done by recording explored cells and giving priority to unseen ones.
 
+**Disposal upgrade**
+
+Instead of using the location bottom right of the area for the green and yellow deposit, when a green robot carries a transformed yellow waste or a yellow robot carries a transformed red waste, they release the waste at the border of their area. This makes the release of transformed waste faster by going to the nearest point of the border instead of going down each time. This clearly improves the convergence of the map cleaning combined to our other improvements.
+
+![batch_image_no_disposal](images/batch_image_no_disposal.png)
+
 ### Analysis of results
 
 As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
@@ -170,7 +176,7 @@ These information are sent to all agents corresponding to a `RobotAgent` without
 
 The communication implemented greatly improves the results and is faster than sending the whole grid information as a message. The grid is constantly cleaned before 200 steps for the same config used as previous experiments.
 
-![batch_image_random](images/batch_image_com.png)
+![batch_image_com](images/batch_image_com.png)
 
 ## Further work :art:
 
