@@ -90,7 +90,7 @@ Our work is divided in several scripts that each handle different parts of the m
 - `Radioactivity(Agent)`: the Radioactivty agent with attributes `radioactivity_level`, `is_waste_disposal` and `is_wall` which defines "Cell agents" representing different features of the map like the level of radioactivity of each cell, the waste disposal zone or delimiting the perimeter of the area with walls.
 - `Environment`: the main environment class with the method `get_info` to return an observation to the robot agent with information about its neighbours (see next paragraph on observation). The method `step` calls `get_info` to get the observation for the current position of the agent and send it back to it, it also updates the environment if the robot moves or if it moves wastes that impacts directly the map.
 
-*Observation* - The observation returned to update the knowledge of a robot is a dictionnary containing:
+**Observation** - The observation returned to update the knowledge of a robot is a dictionnary containing:
 - `radioactivity`: an array 3*3 containing the radioactivity value of all neighbouring cells (itself included, same for next arrays)
 - `color_waste`: an array 3*3 containing the color of the wastes around the robot, if there is no waste a value of -1 is given to the cell
 - `is_waste_disposal`: an array 3*3 with value 1 if it is a cell of the waste disposal zone, else -1
@@ -105,7 +105,7 @@ Our work is divided in several scripts that each handle different parts of the m
 
 ### Agents behaviour
 
-Random Behaviour
+**Random Behaviour**
 
 The random agent adopts a very simple behavior to establish a baselines for the performances:
 - If it is located on a right colored waste, it picks it
@@ -117,35 +117,64 @@ The random agent adopts a very simple behavior to establish a baselines for the 
     - Go Down
     - Go Left
 
-Implemented heuristic
+**Implemented heuristic**
 
 The chosen heuristic is based on the simple idea to have a common deposit slot for every robot. We define a green, yellow and red wastes deposit and they are the locations where our robots can make exchanges. Once they are defined, the robots policy is the following:
 
-Green agent:
+*Green agent*:
 - if it carries a yellow waste, it goes to the yellow deposit and deliver the waste
 - if it knows the location of a green waste, it goes and collect the waste
 - if it carries a green waste, it makes its way towards the green deposit and release the waste if the deposit is empty
 - if None of the above apply, the robot makes a random walk
 
-Yellow agent:
+*Yellow agent*:
 - if it carries a red waste, it goes to the red deposit and deliver the waste
 - if it knows the location of a yellow waste, it goes and collect the waste
 - if it carries a yellow waste, it makes its way towards the yellow deposit and release the waste if the deposit is empty
 - if None of the above apply, the robot makes a random walk
 
-Red agent:
+*Red agent*:
 - if it carries a red waste, it goes to the waste disposal and deliver the waste
 - if it knows the location of a red waste, it goes and collect the waste
 - if None of the above apply, the robot makes a random walk
 - every 15 steps of consecutive random walk, the agent goes and verify the red deposit.
 
+**Exploration upgrade**
+
+Instead of doing a random walk, we also implemented an exploration of unseen cells when the robot doesn't have a target in mind from its knowledge. This is simply done by recording explored cells and giving priority to unseen ones.
+
 ### Analysis of results
 
 As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
 
+### Communication
+
+To improve the behaviour of agents, a communication has been established between robots so they can exchange information on the grid between themselves.
+The code for the mailbox and message system is implemented in the folders `mailbox` and `message`. The defined objects are directly called in the main `RobotAgent` class of `agents.py`
+
+The `step` of an agent is modified as follows:
+```python
+def step(self):
+        action = self.deliberate()
+        percepts = self.model.do(self, action)
+        other_grids = self.read_messages()
+        self.update(percepts, action, other_grids)
+        self.broadcast_message()
+```
+`broadcast_message` is a method used by a robot to send through the mailbox system two information:
+- the agent current position (i,j)
+- the subgrid of the neighbouring cells of this agent
+These information are sent to all agents corresponding to a `RobotAgent` without distinction of color.
+
+`read_messages` opens the mailbox to get the previously defined information which is then used in the `update` to update the internal grid of the agent with the information sent before by the other robots.
+
+The communication implemented greatly improves the results and is faster than sending the whole grid information as a message. The grid is constantly cleaned before 200 steps for the same config used as previous experiments.
+
+![batch_image_random](images/batch_image_com.png)
+
 ## Further work :art:
 
 We are currently working on more features to improve robots behaviour and optimize even better the collection of wastes:
-- Replace random walking by a better policy, including a more efficient exploration
-- Set up communication between robots to exchange information about wastes placement
-- Complexify the environments with varying radiation, robots battery and more
+- Replace random walking by a better policy, including a more efficient exploration :white_check_mark:
+- Set up communication between robots to exchange information about wastes placement :white_check_mark:
+- Complexify the environments with varying radiation, robots battery and more :bulb:
