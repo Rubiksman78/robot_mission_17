@@ -154,9 +154,24 @@ if __name__ == "__main__":
     )
 
     #metric -> first step when the mean is 0
-    first_step_green = np.where(mean_waste_counts_green == 0)[0][0]
-    first_step_yellow = np.where(mean_waste_counts_yellow == 0)[0][0]
-    first_step_red = np.where(mean_waste_counts_red == 0)[0][0]
+    first_step_green = np.where(mean_waste_counts_green == 0)[0]
+    first_step_yellow = np.where(mean_waste_counts_yellow == 0)[0]
+    first_step_red = np.where(mean_waste_counts_red == 0)[0]
+
+    if len(first_step_green) > 0:
+        first_step_green = first_step_green[0]
+    else:
+        first_step_green = "Not cleared"
+
+    if len(first_step_yellow) > 0:
+        first_step_yellow = first_step_yellow[0]
+    else:    
+        first_step_yellow = "Not cleared"
+
+    if len(first_step_red) > 0:
+        first_step_red = first_step_red[0]
+    else:
+        first_step_red = "Not cleared"
 
     plt.text(
         args.steps / 2,
