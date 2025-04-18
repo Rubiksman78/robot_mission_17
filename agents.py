@@ -70,7 +70,7 @@ class RobotAgent(Agent):
         i, j = self.get_pos()
         self.knowledge["grid"][
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
-        ]= percepts["color_waste"]
+        ] = percepts["color_waste"]
 
         if other_grids is not None:
             for grid in other_grids:
@@ -1050,21 +1050,26 @@ class RedAgent(RobotAgent):
         return len(self.knowledge["carried"]) > 0
 
     def go_to_waste_disposal(self):
-        if not self.wall_map()[1, 2] and not self.knowledge["other_robots"][1, 2] == 1:
-            action = "move_Right"
+        possible_actions = []
+        if (
+            self.get_pos()[1] < len(self.knowledge["grid"]) - 3
+            and not self.knowledge["other_robots"][1, 2] == 1
+        ):
+            possible_actions.append("move_Right")
 
-        elif (
+        if (
             self.get_pos()[0] < len(self.knowledge["grid"]) // 2
             and not self.knowledge["other_robots"][0, 1] == 1
         ):
-            action = "move_Up"
+            possible_actions.append("move_Up")
 
         elif not self.knowledge["other_robots"][2, 1] == 1:
-            action = "move_Down"
+            possible_actions.append("move_Down")
 
-        else:
+        if len(possible_actions) == 0:
             return self.random_walk()
 
+        action = random.choice(possible_actions)
         return self.actions_dict[action]
 
     def go_to_red_deposit(self):
