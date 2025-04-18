@@ -50,19 +50,20 @@ class RobotAgent(Agent):
         pass
 
     def update(self, percepts, action, other_grids=None):
+        # print(other_grids)
         if other_grids is not None:
             # for grid in other_grids:
             #     for i in range(self.grid_size + 2):
             #         for j in range(self.grid_size + 2):
             #             if grid[i][j] != -2:
             #                 self.knowledge["grid"][i][j] = grid[i][j]
-            for subgrid, agent_pos in other_grids:
-                for i in range(3):
-                    for j in range(3):
-                        if subgrid[i][j] != -2:
-                            self.knowledge["grid"][agent_pos[0] - 1 + i][
-                                agent_pos[1] - 1 + j
-                            ] = subgrid[i][j]
+            for subgrid, (i, j) in other_grids:
+                for k in range(3):
+                    for l in range(3):
+                        if subgrid[k][l] != -2:
+                            self.knowledge["grid"][self.grid_size - i + k][
+                                j - 1 + l
+                            ] = subgrid[k][l]
 
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
@@ -86,7 +87,6 @@ class RobotAgent(Agent):
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ] = percepts["color_waste"]
 
-        
         self.knowledge.update(percepts)
 
     def step(self):
@@ -107,16 +107,16 @@ class RobotAgent(Agent):
     def broadcast_message(self):
         # Broadcast to all agents
         for agent_id in self.knowledge["id"]:
-            agent_pos = self.get_pos()
+            i, j = self.get_pos()
             sub_grid = self.knowledge["grid"][
-                agent_pos[0] - 1 : agent_pos[0] + 2, agent_pos[1] - 1 : agent_pos[1] + 2
+                self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
             ]
             self.send_message(
                 Message(
                     self.get_id(),
                     agent_id,
                     MessagePerformative.QUERY_REF,
-                    (sub_grid, agent_pos),
+                    (sub_grid, (i, j)),
                 )
             )
 
