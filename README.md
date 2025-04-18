@@ -94,6 +94,31 @@ Our work is divided in several scripts that each handle different parts of the m
 
 ## Agents evaluation methodology
 
+### Simulation parameters
+
+To evaluate our agent heuristics on a common ground, we've decided to set some simulation parameters across all of our experiments.
+Unless stated otherwise, we've used:
+
+```yaml
+n_sim: 50
+steps: 500
+grid_size : 20
+green_robots : 3
+yellow_robots : 3
+red_robots : 3
+green_wastes : 12
+yellow_wastes : 8
+red_wastes : 8
+```
+
+We also compute mean values across 50 simulation to avoir randomness in our results
+
+### Metrics used
+
+We've mostly used two metrics:
+- **Area under the curve (AUC)**: we compute 1 - AUC for each color to evaluate how quickly we manage to get rid of wastes
+- **Completion step for each color**: The step at which all wastes for a color have been dealt with
+
 ## Agents behaviour
 
 ### Random Behaviour
@@ -205,3 +230,8 @@ This final upgrade in our heuristic gives the best results we've had so far, bot
 ## Analysis of results
 
 As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
+
+# TODO update Analysis of results
+maybe compare results when changing the number of agents/ grid size/ waste?
+rerun the graph to have the first step metrics
+compute AUC across all wastes? maybe it would make more sense overall
