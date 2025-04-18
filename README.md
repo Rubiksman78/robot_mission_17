@@ -143,17 +143,15 @@ The chosen heuristic is based on the simple idea to have a common deposit slot f
 
 Instead of doing a random walk, we also implemented an exploration of unseen cells when the robot doesn't have a target in mind from its knowledge. This is simply done by recording explored cells and giving priority to unseen ones.
 
-**Depositif upgrade**
+**Disposal upgrade**
 
 Instead of using the location bottom right of the area for the green and yellow deposit, when a green robot carries a transformed yellow waste or a yellow robot carries a transformed red waste, they release the waste at the border of their area. This makes the release of transformed waste faster by going to the nearest point of the border instead of going down each time. This clearly improves the convergence of the map cleaning combined to our other improvements.
 
-
+![batch_image_no_disposal](images/batch_image_no_disposal.png)
 
 ### Analysis of results
 
 As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
-
-![batch_image_no_disposal](images/batch_image_no_disposal.png)
 
 ### Communication
 
