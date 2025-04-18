@@ -50,6 +50,13 @@ class RobotAgent(Agent):
         pass
 
     def update(self, percepts, action, other_grids=None):
+        if other_grids is not None:
+            for grid in other_grids:
+                for i in range(self.grid_size + 2):
+                    for j in range(self.grid_size + 2):
+                        if grid[i][j] != -2:
+                            self.knowledge["grid"][i][j] = grid[i][j]
+                            
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
                 self.knowledge["carried"] = [self.knowledge["color_waste"][1][1]]
@@ -72,12 +79,7 @@ class RobotAgent(Agent):
             self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
         ]= percepts["color_waste"]
 
-        if other_grids is not None:
-            for grid in other_grids:
-                for i in range(self.grid_size + 2):
-                    for j in range(self.grid_size + 2):
-                        if grid[i][j] != -2:
-                            self.knowledge["grid"][i][j] = grid[i][j]
+        
         self.knowledge.update(percepts)
 
     def step(self):
