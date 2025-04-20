@@ -202,7 +202,7 @@ Thanks to the new communication system, every agent is immediately informed when
 
 We’ve updated our agents’ behavior so that they now release waste near the edge of the radioactive zone. They head directly to the border to dispose of their waste and then communicate the exact location to the next group of agents, who can retrieve it efficiently.
 
-This further improved the performance of our multi-agent system as the AUC scores used slightly increased :
+This further improved the performance of our multi-agent system as the AUC scores used slightly increased and the time needed to dispose of red wastes was reduced:
 
 ![batch_image_no_disposal](images/batch_image_no_disposal.png)
 
@@ -225,12 +225,3 @@ Each agent will send in their message their position and what they are carrying.
 This final upgrade in our heuristic gives the best results we've had so far, both for the AUC metric and the time needed to dispose of all wastes. 
 
 ![batch_image_paps](images/batch_image_paps.png)
-
-
-## Analysis of results
-
-As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
-
-# TODO update Analysis of results
-maybe compare results when changing the number of agents/ grid size/ waste?
-rerun the graphs with old heuristics to have the first step metrics

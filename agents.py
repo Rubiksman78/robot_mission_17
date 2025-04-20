@@ -511,12 +511,16 @@ class GreenAgent(RobotAgent):
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
 
+        prio1, prio2 = [], []
+
         x, y = self.get_pos()
         if self.knowledge["carried"] == [self.color_to_gather]:
             prio1.append((x, y))
 
         elif len(self.knowledge["carried"]) == 0:
             prio2.append((x, y))
+
+        
 
         attributions, targets = self.attribution(prio1, targets)
         attributions, targets = self.attribution(prio2, targets, attributions)
@@ -560,6 +564,8 @@ class GreenAgent(RobotAgent):
             for pos in self.knowledge["carried_by_others"][self.color_to_gather]
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
+
+        prio1, prio2 = [], []
 
         x, y = self.get_pos()
         if self.knowledge["carried"] == [self.color_to_gather]:
@@ -893,6 +899,9 @@ class YellowAgent(RobotAgent):
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
 
+        prio1, prio2 = [], []
+
+
         x, y = self.get_pos()
         if self.knowledge["carried"] == [self.color_to_gather]:
             prio1.append((x, y))
@@ -940,6 +949,9 @@ class YellowAgent(RobotAgent):
             for pos in self.knowledge["carried_by_others"][self.color_to_gather]
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
+
+        prio1, prio2 = [], []
+
 
         x, y = self.get_pos()
         if self.knowledge["carried"] == [self.color_to_gather]:
@@ -1210,6 +1222,8 @@ class RedAgent(RobotAgent):
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
 
+        prio = []
+
         x, y = self.get_pos()
 
         if len(self.knowledge["carried"]) == 0:
@@ -1246,6 +1260,8 @@ class RedAgent(RobotAgent):
             for pos in self.knowledge["carried_by_others"][self.color_to_gather]
             if len(self.knowledge["carried_by_others"][self.color_to_gather][pos]) == 0
         ]
+
+        prio = []
 
         x, y = self.get_pos()
 
