@@ -2,6 +2,7 @@
 
 This project aims to developed a multi-agent framework to develop robots cleaning wastes in a nuclear plant based on different constraints such as radioactivity levels or robots specifications.
 
+Table of contents:
 - [Robot mission :rocket:](#robot-mission-rocket)
   - [Installation :arrow\_down:](#installation-arrow_down)
   - [Run the project :technologist:](#run-the-project-technologist)
