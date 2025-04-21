@@ -5,8 +5,14 @@ import numpy as np
 import tqdm
 import yaml
 
-from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
-                    RandomYellowAgent, RedAgent, YellowAgent)
+from agents import (
+    GreenAgent,
+    RandomGreenAgent,
+    RandomRedAgent,
+    RandomYellowAgent,
+    RedAgent,
+    YellowAgent,
+)
 from env import Waste
 from message.MessageService import MessageService
 from model import RobotMission
@@ -62,12 +68,6 @@ def visualize_simulation(model, steps, use_random_agents):
                     yellow_count += 1
                 else:
                     red_count += 1
-            elif isinstance(agent, (greenagentclass, yellowagentclass, redagentclass)):
-                color = (
-                    "green"
-                    if isinstance(agent, greenagentclass)
-                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
-                )
         waste_counts["green"].append(green_count)
         waste_counts["yellow"].append(yellow_count)
         waste_counts["red"].append(red_count)
@@ -79,11 +79,11 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--n_sim",
         type=int,
-        default=10,
+        default=20,
         help="Number of simulations to run",
     )
     argparser.add_argument(
-        "--steps", type=int, default=300, help="Number of steps to run the simulation"
+        "--steps", type=int, default=500, help="Number of steps to run the simulation"
     )
     argparser.add_argument(
         "--do_random", action="store_true", help="Use random agents", default=False
@@ -149,30 +149,23 @@ if __name__ == "__main__":
     plt.ylabel("Waste Count")
     plt.text(
         args.steps / 2,
-        max_wastes - 1,
-        f"Score green: {1-auc_green:.2f}\nScore yellow: {1-auc_yellow:.2f}\nScore red: {1-auc_red:.2f}",
+        max_wastes - 2,
+        f"Score green: {1 - auc_green:.2f}\nScore yellow: {1 - auc_yellow:.2f}\nScore red: {1 - auc_red:.2f}\nGlobal Score : {1 -(auc_green + auc_yellow + auc_red)/3:.2f}",
     )
 
     # metric -> first step when the mean is 0
-    first_step_green = np.where(mean_waste_counts_green == 0)[0]
-    first_step_yellow = np.where(mean_waste_counts_yellow == 0)[0]
-    first_step_red = np.where(mean_waste_counts_red == 0)[0]
+    first_step_green = np.where(mean_waste_counts_green != 0)[0][-1] + 1
+    first_step_yellow = np.where(mean_waste_counts_yellow != 0)[0][-1] + 1
+    first_step_red = np.where(mean_waste_counts_red != 0)[0][-1] + 1
 
-    if len(first_step_green) > 0:
-        first_step_green = first_step_green[0]
-    else:
+    if first_step_green >= len(mean_waste_counts_green):
         first_step_green = "Not cleared"
 
-    if len(first_step_yellow) > 0:
-        first_step_yellow = first_step_yellow[0]
-    else:
+    if first_step_yellow >= len(mean_waste_counts_yellow):
         first_step_yellow = "Not cleared"
 
-    if len(first_step_red) > 0:
-        first_step_red = first_step_red[0]
-    else:
+    if first_step_red >= len(mean_waste_counts_red):
         first_step_red = "Not cleared"
-
     plt.text(
         args.steps / 2,
         max_wastes - 4,

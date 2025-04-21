@@ -1,6 +1,22 @@
 # Robot mission :rocket:
 
-Project to clean nuclear reactors with robots.
+This project aims to developed a multi-agent framework to develop robots cleaning wastes in a nuclear plant based on different constraints such as radioactivity levels or robots specifications.
+
+- [Robot mission :rocket:](#robot-mission-rocket)
+  - [Installation :arrow\_down:](#installation-arrow_down)
+  - [Run the project :technologist:](#run-the-project-technologist)
+  - [Batch simulation :chart\_with\_upwards\_trend:](#batch-simulation-chart_with_upwards_trend)
+  - [Architecture chosen :bricks:](#architecture-chosen-bricks)
+  - [Agents evaluation methodology :stethoscope:](#agents-evaluation-methodology-stethoscope)
+    - [Simulation parameters](#simulation-parameters)
+    - [Metrics used](#metrics-used)
+  - [Agents behaviour :truck:](#agents-behaviour-truck)
+    - [Random Behaviour](#random-behaviour)
+    - [First implemented heuristic](#first-implemented-heuristic)
+    - [Exploration upgrade](#exploration-upgrade)
+    - [Communication](#communication)
+    - [Changes to the disposal system](#changes-to-the-disposal-system)
+    - [Further leveraging the potential of the communication system](#further-leveraging-the-potential-of-the-communication-system)
 
 ## Installation :arrow_down:
 
@@ -59,19 +75,7 @@ red_wastes : 8
 grid_size : 20
 ```
 
-Some results for the previously defined configuration are shown here:
-
-Heuristic agents:
-
-![batch_image](images/batch_image.png)
-
-Random agents:
-
-![batch_image_random](images/batch_image_random.png)
-
-## Explanations :memo:
-
-### Architecture chosen
+## Architecture chosen :bricks:
 
 Our work is divided in several scripts that each handle different parts of the modelisation:
 - `agents.py`: definition of `RobotAgent` with common behaviours and specific behaviours for Green, Yellow and Red robots
@@ -103,9 +107,37 @@ Our work is divided in several scripts that each handle different parts of the m
 - `Radioactivity placing`: Radioactivity agents are placed on every cell with a different value according to the defined radioactivity zones (green, yellow and red). A rectangle of size 5*2 is also placed on the far right side to represent the waste disposal zone, radioactivity is the same as the red zone.
 - `Waste placing`: Wastes are placed randomly on the grid in their respective zones. Two wastes can't be placed at the same location too.
 
-### Agents behaviour
 
-**Random Behaviour**
+## Agents evaluation methodology :stethoscope:
+
+### Simulation parameters
+
+To evaluate our agent heuristics on a common ground, we've decided to set some simulation parameters across all of our experiments.
+Unless stated otherwise, we've used:
+
+```yaml
+n_sim: 50
+steps: 500
+grid_size : 20
+green_robots : 3
+yellow_robots : 3
+red_robots : 3
+green_wastes : 12
+yellow_wastes : 8
+red_wastes : 8
+```
+
+We also compute mean values across 50 simulation to avoir randomness in our results
+
+### Metrics used
+
+We've mostly used two metrics:
+- **Area under the curve (AUC)**: we compute 1 - AUC for each color to evaluate how quickly we manage to get rid of wastes
+- **Completion step for each color**: The step at which all wastes for a color have been dealt with
+
+## Agents behaviour :truck:
+
+### Random Behaviour
 
 The random agent adopts a very simple behavior to establish a baselines for the performances:
 - If it is located on a right colored waste, it picks it
@@ -117,7 +149,13 @@ The random agent adopts a very simple behavior to establish a baselines for the 
     - Go Down
     - Go Left
 
-**Implemented heuristic**
+The results for our random walker agents are as followed:
+
+![batch_image_random](images/batch_image_random.png)
+
+We can see that the random agents struggle to complete their task in 500 time steps. They often struggle to find wastes to pick up, and even more to have two of them to turn it into the next color.
+
+### First implemented heuristic
 
 The chosen heuristic is based on the simple idea to have a common deposit slot for every robot. We define a green, yellow and red wastes deposit and they are the locations where our robots can make exchanges. Once they are defined, the robots policy is the following:
 
@@ -139,19 +177,13 @@ The chosen heuristic is based on the simple idea to have a common deposit slot f
 - if None of the above apply, the robot makes a random walk
 - every 15 steps of consecutive random walk, the agent goes and verify the red deposit.
 
-**Exploration upgrade**
+The results for our heuristic show that our new agents are a clear upgrade from the random walk agents, although they struggle to fully complete the task. Indeed, yellow and even more red agents have a lot of ground to cover and the random walk process isn't enough to explore the whole map.
+
+![batch_image](images/batch_image.png)
+
+### Exploration upgrade
 
 Instead of doing a random walk, we also implemented an exploration of unseen cells when the robot doesn't have a target in mind from its knowledge. This is simply done by recording explored cells and giving priority to unseen ones.
-
-**Disposal upgrade**
-
-Instead of using the location bottom right of the area for the green and yellow deposit, when a green robot carries a transformed yellow waste or a yellow robot carries a transformed red waste, they release the waste at the border of their area. This makes the release of transformed waste faster by going to the nearest point of the border instead of going down each time. This clearly improves the convergence of the map cleaning combined to our other improvements.
-
-![batch_image_no_disposal](images/batch_image_no_disposal.png)
-
-### Analysis of results
-
-As demonstrated in the previous section with the batch simulation, the implemented heuristic for robots far outperforms the random behaviour. The metric used (1 minus AUC of collected wastes) is doubled for yellow and red wastes. Such change is less obvious with green wastes because the implemented behaviour improves how all robots retain some kind of memory but also optimizes where the green robots will place the created yellow wastes for yellow robots to pick. Similarly, yellow robots place created red wastes in a specific region for red robots so it becomes easier for them to pick these wastes and bring them to the waste deposit.
 
 ### Communication
 
@@ -178,9 +210,34 @@ The communication implemented greatly improves the results and is faster than se
 
 ![batch_image_com](images/batch_image_com.png)
 
-## Further work :art:
 
-We are currently working on more features to improve robots behaviour and optimize even better the collection of wastes:
-- Replace random walking by a better policy, including a more efficient exploration :white_check_mark:
-- Set up communication between robots to exchange information about wastes placement :white_check_mark:
-- Complexify the environments with varying radiation, robots battery and more :bulb:
+### Changes to the disposal system
+
+
+Thanks to the new communication system, every agent is immediately informed when a waste item has been released. As a result, there's no longer a need to assign fixed waste disposal locations for each color—agents will automatically know where the released wastes are.
+
+We’ve updated our agents’ behavior so that they now release waste near the edge of the radioactive zone. They head directly to the border to dispose of their waste and then communicate the exact location to the next group of agents, who can retrieve it efficiently.
+
+This further improved the performance of our multi-agent system as the AUC scores used slightly increased and the time needed to dispose of red wastes was reduced:
+
+![batch_image_no_disposal](images/batch_image_no_disposal.png)
+
+### Further leveraging the potential of the communication system
+
+So far, we've only used the communication system to help agents remember the position of wastes. We can go further, by also using the position of other agents to improve their coordination.
+
+Let's take the following situation where two green agents are searching for a green waste:
+
+![example_two_agents](images/example_two_agents.jpg)
+
+Although both agents are closer to the waste at the top of the grid, their positions suggest that one will reach it faster. Consequently, the second agent should avoid pursuing the same target and instead redirect its efforts toward other available wastes, even if they are located farther away.
+
+![example_two_agents_better](images/example_two_agents_better.jpg)
+
+We also give priority to agents already carrying a waste, as they will directly be able to turn it into the next color and deliver their waste.
+
+Each agent will send in their message their position and what they are carrying. Using this, other agents will etermine if they are the best suited agent to pick up a waste or not, and act accordingly. This limits the frequency of conflicts between agents aiming for a same waste.
+
+This final upgrade in our heuristic gives the best results we've had so far, both for the AUC metric and the time needed to dispose of all wastes. 
+
+![batch_image_paps](images/batch_image_paps.png)

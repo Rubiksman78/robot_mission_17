@@ -3,8 +3,14 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 
-from agents import (GreenAgent, RandomGreenAgent, RandomRedAgent,
-                    RandomYellowAgent, RedAgent, YellowAgent)
+from agents import (
+    GreenAgent,
+    RandomGreenAgent,
+    RandomRedAgent,
+    RandomYellowAgent,
+    RedAgent,
+    YellowAgent,
+)
 from env import Waste
 from message.MessageService import MessageService
 from model import RobotMission
@@ -67,7 +73,9 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
                 color = (
                     "green"
                     if isinstance(agent, greenagentclass)
-                    else "yellow" if isinstance(agent, yellowagentclass) else "red"
+                    else "yellow"
+                    if isinstance(agent, yellowagentclass)
+                    else "red"
                 )
                 ax.scatter(
                     agent.pos[0],
@@ -98,7 +106,7 @@ def visualize_simulation(model, steps=500, use_random_agents=True):
         ax.set_yticks(range(model.grid_size))
         ax.set_title(f"Step: {step}")
 
-        plt.pause(0.001)
+        plt.pause(0.01)
 
 
 def start_gui():
