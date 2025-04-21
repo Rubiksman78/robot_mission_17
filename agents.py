@@ -14,7 +14,7 @@ UNEXPLORED = -2
 
 
 class RobotAgent(Agent):
-    def __init__(self, model, knowledge: dict):  # TODO ask yourself how to create model
+    def __init__(self, model, knowledge: dict):
         super().__init__(model)
         self.knowledge = knowledge
         self.colors_ids = {0: "green", 1: "yellow", 2: "red"}
@@ -59,8 +59,8 @@ class RobotAgent(Agent):
                             self.knowledge["grid"][self.grid_size - i + k][
                                 j - 1 + l
                             ] = subgrid[k][l]
-            
-                self.knowledge["carried_by_others"][color][(i,j)] = carried
+
+                self.knowledge["carried_by_others"][color][(i, j)] = carried
 
         if action == self.actions_dict["pick"] and percepts["success"]:
             if self.knowledge["carried"] == []:
@@ -104,7 +104,7 @@ class RobotAgent(Agent):
     def broadcast_message(self):
         # Broadcast to all agents
         for agent_id in self.knowledge["id"]:
-            if agent_id!= self.get_id():
+            if agent_id != self.get_id():
                 i, j = self.get_pos()
                 sub_grid = self.knowledge["grid"][
                     self.grid_size - i : self.grid_size - i + 3, j - 1 : j + 2
@@ -115,7 +115,12 @@ class RobotAgent(Agent):
                         self.get_id(),
                         agent_id,
                         MessagePerformative.QUERY_REF,
-                        (sub_grid, (i, j), self.knowledge["carried"], self.color_to_gather),
+                        (
+                            sub_grid,
+                            (i, j),
+                            self.knowledge["carried"],
+                            self.color_to_gather,
+                        ),
                     )
                 )
 

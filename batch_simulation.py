@@ -153,7 +153,7 @@ if __name__ == "__main__":
         f"Score green: {1-auc_green:.2f}\nScore yellow: {1-auc_yellow:.2f}\nScore red: {1-auc_red:.2f}",
     )
 
-    #metric -> first step when the mean is 0
+    # metric -> first step when the mean is 0
     first_step_green = np.where(mean_waste_counts_green == 0)[0]
     first_step_yellow = np.where(mean_waste_counts_yellow == 0)[0]
     first_step_red = np.where(mean_waste_counts_red == 0)[0]
@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
     if len(first_step_yellow) > 0:
         first_step_yellow = first_step_yellow[0]
-    else:    
+    else:
         first_step_yellow = "Not cleared"
 
     if len(first_step_red) > 0:
